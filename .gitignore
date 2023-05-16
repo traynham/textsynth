@@ -1,0 +1,7 @@
+.DS_Store
+.nova
+.env
+package-lock.json
+/cache
+/node_modules
+/tests/coverage
