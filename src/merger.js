@@ -10,7 +10,19 @@ import walk from 'walk-sync'
 
 class TextMerger {
 	
+	// PLUGINS/TAGS
 	plugins = {}
+	tags = {}
+	
+	// DELIMITERS
+	opener_raw
+	closer_raw
+	opener_enc
+	closer_enc
+	
+	// SETTINGS
+	flush_comments = true
+	removeTabs
 	views
 	
 	constructor(options = {}) {
@@ -22,30 +34,28 @@ class TextMerger {
 		this.closer_enc = this.closer_raw.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
 		
 		this.removeTabs = options.removeTabs !== false
-		this.removeTrailingNewLine = options.removeTrailingNewLine !== false
 		
 		this.views = path.join(
 			this._getAppRoot(), 
 			options.views ? options.views : 'views'
 		)
-
 		
 	}
 
 	_getAppRoot = () => {
 		
+		/*
+			Starting at the current working directory, this method locates and returns 
+			the path of the closest parent directory containing 'node_modules', 
+			or null if none found.
+		*/
+		
 		let currentPath = process.cwd()
 		
 		while (currentPath !== path.parse(currentPath).root) {
-			
 			const dirListing = fs.readdirSync(currentPath)
-			
-			if (dirListing.includes('node_modules')) {
-				return currentPath
-			}
-			
+			if (dirListing.includes('node_modules')) { return currentPath }
 			currentPath = path.dirname(currentPath)
-			
 		}
 		
 		return null
@@ -54,12 +64,21 @@ class TextMerger {
 
 
 	// Load default plugins from the "plugins" directory
-	// TODO: Generate a single file to import, and only load if env.MODE is DEV
 	async _loadDefaultPlugins() {
-		
 		const __filename = fileURLToPath(import.meta.url)
 		const __dirname = dirname(__filename)
 		const pluginDirectory = join(__dirname, 'plugins')
+		await this._loadPluginsDir(pluginDirectory)
+	}
+	
+	async _loadCustomPlugins(pluginDirectory){
+		if(!pluginDirectory){ return }
+		await this._loadPluginsDir(pluginDirectory)
+	}
+	
+	async _loadPluginsDir(pluginDirectory) {
+		
+		// TODO: Test to see if path is valid before continuing.
 		
 		const pluginFiles = walk(pluginDirectory, {
 			globs: ['**/*.js'],
@@ -69,20 +88,54 @@ class TextMerger {
 		const pluginImports = pluginFiles.map((file) => import(join(pluginDirectory, file)))
 		const plugins = await Promise.all(pluginImports)
 		
+		this._registerPlugins(plugins)
+		
+	}
+	
+	_registerPlugins(plugins){
 		for (const pluginModule of plugins) {
 			const plugin = pluginModule.default
-			this.plugins[plugin.name] = plugin
 			this.use(plugin)
 		}
+		
 	}
 
 	// Register one or more plugins
 	use = (...plugins) => {
 		plugins.forEach((plugin) => {
 			this.plugins[plugin.name] = plugin
+			this.tags[plugin.name] = plugin
+			if(plugin.aliases){
+				this.alias(plugin.name, plugin.aliases)
+			}
 		})
 	}
+	
+	// Register one or more aliases for a tag.
+	alias = (tag, alias) => {
+		if(!Array.isArray(alias)) { alias = [alias] }
+		alias.forEach( alias => {
+			this.tags[alias] = this.plugins[tag]
+		})
+	}
+	
+	// INIT
+	async init(opt = {}) {
+		
+		if(!opt.custom){
+			opt.custom = 'examples/express/plugins' // CHANGE TO A BETTER DEFAULT
+		}
+		
+		// LOAD DEFAULT PLUGINS
+		await this._loadDefaultPlugins()
+		
+		// LOAD CUSTOM PLUGINS
+		let custom = path.join(this._getAppRoot(), opt.custom)
+		await this._loadCustomPlugins(custom)
+		
+	}
 
+	// MERGE
 	merge(template, payload) {
 		
 		if(!payload._synth?.views){
@@ -90,21 +143,30 @@ class TextMerger {
 			payload._synth.views = this.views
 		}
 		
-		// Remove single-line comments
-		template = template.replace(/(?<!:)(\/\/[^\n]*)/g, '')
+		if('flush_comments' in payload._synth){
+			this.flush_comments = payload._synth.flush_comments
+		}
 		
-		// Remove multi-line comments
-		template = template.replace(/\/\*[\s\S]*?\*\//g, '')
+		// REMOVE COMMENTS
+		if(this.flush_comments){
+			
+			// Remove single-line comments
+			template = template.replace(/(?<!:)(\/\/[^\n]*)/g, '')
+			
+			// Remove multi-line C-style comments
+			template = template.replace(/\/\*[\s\S]*?\*\//g, '')
+			
+			// Remove multi-line HTML comments
+			template = template.replace(/<!--[\s\S]*?-->/g, '')
+			
+		}
 		
-		// Remove tabs if the option is set
+		// REMOVE LEADING TABS
 		if (this.removeTabs) {
-			template = template.replace(/\t/g, '')
+			template = template.replace(/^\t+/gm, '')
 		}
 		
-		// Remove trailing new lines if the option is set
-		if (this.removeTrailingNewLine) {
-			template = template.replace(new RegExp(`${this.closer_enc}(\r?\n)+$`, 'g'), this.closer_raw)
-		}
+		// PROCESS
 		
 		let processed
 		
@@ -147,9 +209,10 @@ class TextMerger {
 	}
 	
 	_processSingles(input, payload) {
-
+		
+		// Match unescaped TextSynth tags, ignoring surrounding whitespaces within the tags.
 		const mergeTagRegex = new RegExp(
-			`${this.opener_enc}\\s*(.*?)\\s*${this.closer_enc}`,
+			`(?<!\\\\)${this.opener_enc}\\s*(.*?)\\s*(?<!\\\\)${this.closer_enc}`,
 			'g'
 		)
 		
@@ -164,13 +227,13 @@ class TextMerger {
 			let content = this._getValueFromPath(name, payload)
 			
 			if (content === undefined) {
-				console.log(`The property path "${name}" does not exist in the payload. The merge tag will be replaced with an empty string.`)
+				//console.log(`Property path "${name}" absent in payload, merge tag replaced with empty string.`)
 				content = ''
 			}
 			
 			for (const { name, params } of processors) {
 				
-				const plugin = this.plugins[name]
+				const plugin = this.tags[name]
 				
 				if (plugin) {
 					const request = {
@@ -182,11 +245,14 @@ class TextMerger {
 					const response = plugin.processor(request);
 					content = response;
 				}
+				
 			}
 			
 			return content
 			
 		})
+		.replace(new RegExp(`\\\\(${this.opener_enc}|${this.closer_enc})`, 'g'), '$1'); // Removes preceding escape characters for [ and ]
+		
 	}
 
 
@@ -200,8 +266,8 @@ class TextMerger {
 			foundContainer = false
 			
 			const mergeTagRegex = new RegExp(
-				`${this.opener_enc}\\s*(.*?)\\s*${this.closer_enc}`,
-				'g'
+				`${this.opener_enc}\\s*(.*?)\\s*${this.closer_enc}(\\n)?`, 
+				'gs'
 			)
 			
 			let match
@@ -224,11 +290,11 @@ class TextMerger {
 				const params = name ? name.split(',').map(param => this._getValueFromPath(param.trim(), payload)) : [];
 				
 				let processedContent = content; // Do not process nested containers at this point
-				
+					
 				// Apply each processor (plugin) in order
 				processors.forEach(({ name }) => {
 					
-					const plugin = this.plugins[name];
+					const plugin = this.tags[name];
 					
 					if (plugin) {
 						const request = {
@@ -242,7 +308,8 @@ class TextMerger {
 					}
 				})
 				
-				processedContent = this._processContainers(processedContent, payload); // Process nested containers after processing the outer container
+				// Process nested containers after processing the outer container
+				processedContent = this._processContainers(processedContent, payload);
 				
 				// Replace the entire content between the opening and closing tags, including the closing tag
 				output = output.slice(0, match.index) + processedContent + output.slice(closingIndex + closingTag.length);
@@ -263,6 +330,8 @@ class TextMerger {
 	_findClosingTagIndex(input, startIndex, tagName) {
 		
 		const openingTagPattern = new RegExp(`${this.opener_enc}${tagName}`, 'g')
+//		const openingTagPattern = new RegExp(`${this.opener_enc}${tagName}(\\n)?`, 'g')
+
 		const closingTagPattern = new RegExp(`${this.opener_enc}\\/${tagName}${this.closer_enc}`, 'g')
 		
 		let index = startIndex
@@ -301,10 +370,10 @@ class TextMerger {
 	_parseMergeTag(mergeTag) {
 		
 		// TAG SHAPE: Colon after name is optional, space is not.
-		const [tagParams, name] = mergeTag.split(/:? (.+)/).map((part) => part.trim())
+		const [tagParams, name] = mergeTag.split(/(?<!\([^)]*):? (.+)/).map((part) => part.trim());
 		
 		// IF CONTAINER TAG WITH NO PARAMS OR CONTENT.
-		if (this.plugins[mergeTag]) {
+		if (this.tags[mergeTag]) {
 			return { kind: 'container', processors: [{name: mergeTag, params: []}], name: mergeTag }
 		}
 		
@@ -321,14 +390,19 @@ class TextMerger {
 			const params = paramsStr.length
 				? paramsStr[0]
 					.split(/,(?=(?:[^"']*["'][^"']*["'])*[^"']*$)/)
-					.map((param) => param.trim().replace(/^["']+|["']+$/g, ''))
+					.map((param) => {
+						param = param.trim().replace(/^["']+|["']+$/g, '');
+						if (param.toLowerCase() === 'true') return true;
+						if (param.toLowerCase() === 'false') return false;
+						return param;
+					})
 				: [];
 			
 			return { name: tagName, params }
 			
 		})
 		
-		const plugin = this.plugins[processors[0].name]
+		const plugin = this.tags[processors[0].name]
 		const kind = plugin?.kind ? plugin.kind : 'single' // SINGLE IS DEFAULT.
 		
 		return { kind, processors, name }
@@ -339,28 +413,20 @@ class TextMerger {
 	_getValueFromPath(path, obj) {
 		
 		// isUndefined
-		if(path === undefined){
-			return ''
-		}
+		if(path === undefined){ return '' }
 		
-		if(Array.isArray(path)){
-			return path
-		}
+		// isArray
+		if(Array.isArray(path)){ return path}
 		
-		if(typeof path === 'object'){
-			return path
-		}
+		// isObject
+		if(typeof path === 'object'){ return path }
 		
 		// isString
-		if (/^["'].*["']$/.test(path)) {
-			return path.slice(1, -1);
-		}
+		if (/^["'].*["']$/.test(path)) { return path.slice(1, -1) }
 		
 		// isNumber
 		const maybeNumber = Number(path)
-		if (!isNaN(maybeNumber) || path === '0') {
-			return maybeNumber
-		}
+		if (!isNaN(maybeNumber) || path === '0') { return maybeNumber }
 		
 		// isBOOLEAN
 		// Check if the path is a string before calling toLowerCase()
@@ -393,7 +459,7 @@ async function expressTextSynthEngine(filePath, options, callback) {
 	options._synth.isExpress = true
 	options._synth.views = options.settings?.views
 	options._synth.template = filePath
-	
+
 	// Merge the template with the provided data
 	const mergedText = await options.textSynth.mergeFile(filePath, options)
 
@@ -403,11 +469,14 @@ async function expressTextSynthEngine(filePath, options, callback) {
 }
 /* c8 ignore end */
 
+
+// CREATE A NEW TEXTMERGER AND INIT.
 async function createTextSynth(opt) {
 	const textMerger = new TextMerger(opt);
-	await textMerger._loadDefaultPlugins();
+	await textMerger.init()
 	return textMerger;
 }
 
-export default createTextSynth;
+
+export default createTextSynth; // textSynth
 export { createTextSynth, expressTextSynthEngine };
