@@ -5,22 +5,8 @@ export default {
 	usage: '{{replace(" ", "-"): site.title}}',
 	category: 'Text',
 	processor(req) {
-		let [ search, replacement ] = req.params
-		
-		console.log({
-			search,
-			replacement
-		})
-		
-		//return req.content.replaceAll(search, replacement);
-		
+		const [ search, replacement ] = req.params
 		const replacer = new RegExp(search, 'g')
-		
-		
 		return req.content.replace(replacer, replacement)
-		
-		
-		
-		
 	}
 }
