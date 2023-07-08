@@ -1,11 +1,46 @@
+/*
+	TODO:
+	* Allow regex q on array?
+*/
+
 export default {
 	name: 'count',
 	description: 'Counts the number of elements in an array, characters in a string, or occurrences of a specified value in the input.',
-	example: '{{count: property.path}}',
-	usage: '{{count: site.categories}}',
+	_example: '[count: property.path]',
+	examples: [
+		{
+			code: "[count 'This is 10']",
+			result: '10'
+		},
+		{
+			code: "[count found_array]",
+			result: '15 (Assuming there are 15 array items)'
+		},
+		{
+			code: "[count('t') 'This is a test']",
+			result: '2'
+		},
+	],
+	usage: '[count property], [count(query) property]',
 	type: ['string', 'array'],
 	category: 'Array/Text',
 	kind: 'single',
+	params: [
+		{
+			name: 'query',
+			type: 'string',
+			required: false,
+			description: 'String to filter with.'
+		}
+	],
+	content: [
+		{
+			name: 'content',
+			type: 'any',
+			required: true,
+			description: 'The item be counted.'
+		}
+	],
 	processor(req) {
 		
 		let q = req.params[0]
@@ -20,7 +55,7 @@ export default {
 		}
 		
 		if (q && typeof content === 'string') {
-			return (content.match(new RegExp(q, 'g')) || []).length
+			return (content.match(new RegExp(q, 'g'))).length
 		}
 		
 		return content.length
