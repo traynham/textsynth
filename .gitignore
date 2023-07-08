@@ -5,3 +5,4 @@ package-lock.json
 /cache
 /node_modules
 /tests/coverage
+/tests/support/cache
