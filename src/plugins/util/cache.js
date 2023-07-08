@@ -1,94 +1,108 @@
+import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
-
-import { add } from 'date-fns'
-
-
-const cacheFolder = './cache'
-
-function ensureCacheFolderExists() {
-	if (!fs.existsSync(cacheFolder)) {
-		fs.mkdirSync(cacheFolder)
-	}
-}
-
-function getCacheFilePath(name) {
-	return path.join(cacheFolder, `${name}.json`)
-}
-
-function isCacheValid(expiration, cacheData) {
-	const now = new Date().getTime()
-	return now <= cacheData.expiration
-}
 
 export default {
 	name: 'cache',
 	kind: 'container',
-	category: 'Performance',
-	description: 'Caches the content and serves it if not expired.',
-	usage: `{{cache: 'name', 'expiration'}} ... {{/cache}}`,
+	category: 'Util',
+	description: 'Automatically caches the content between the cache tags. If the same content is encountered again, the cached version is used. The cache is automatically invalidated and refreshed when the content changes. Optionally, old cache files can be cleaned up.',
+	examples: [
+		{
+			code: "[cache]This is some content to cache[/cache]",
+			result: "This is some content to cache",
+			comment: "The content will be cached."
+		}
+	],
+	settings: {
+		cacheFolder: './cache', // Directory to store cache files
+		cacheDuration: 7,  // Maximum age of cache files in days
+		cacheCleanup: false // Whether to always perform cleanup of old cache files
+	},
+	syntax: `[cache] ... [/cache]`,
+	
 	processor(req) {
 		
-		ensureCacheFolderExists()
+		let { cacheFolder, cacheDuration, cacheCleanup } = this.settings
 		
-		const [ name, expiration ] = req.params
-		const cacheFilePath = getCacheFilePath(name)
-		if (fs.existsSync(cacheFilePath)) {
-			
-			const cacheData = JSON.parse(fs.readFileSync(cacheFilePath, 'utf-8'))
-			
-			if (isCacheValid(expiration, cacheData)) {
-				return cacheData.content
-			}
-			
+		console.log('SETTINGS::', this.settings)
+		
+		// Create cache directory if it doesn't exist
+		if (!fs.existsSync(cacheFolder)) {
+			fs.mkdirSync(cacheFolder)
 		}
 		
+		// Cleanup cache if the setting is enabled
+		if(cacheCleanup){
+			this.cleanupCache(cacheFolder, cacheDuration)
+		}
+		
+		// Generate a checksum from the content
+		const contentChecksum = this.getChecksum(req.content);
+		const cacheFilePath = path.join(cacheFolder, `${contentChecksum}.cache`)
+		
+		// If cache file exists and its checksum matches the content's checksum, return the cached content
+		if (fs.existsSync(cacheFilePath)) {
+			const cacheData = fs.readFileSync(cacheFilePath, 'utf-8')
+			const { name } = path.parse(cacheFilePath)
+			
+			if(contentChecksum === name) {
+				return cacheData
+			}
+		}
+		
+		// Process the content
 		const processedContent = req.textMerger.merge(req.content, req.payload)
 		
-		const cacheData = {
-			content: processedContent,
-			expiration: parseExpiration(expiration)
-		}
+		// Cache the processed content
+		fs.writeFileSync(cacheFilePath, processedContent, 'utf-8')
 		
-		fs.writeFileSync(cacheFilePath, JSON.stringify(cacheData), 'utf-8')
-		
+		// Return the processed content
 		return processedContent
 		
+	},
+	
+	// Function to generate a checksum from a string
+	getChecksum(str) {
+		return crypto
+			.createHash('md5')
+			.update(str, 'utf8')
+			.digest('hex')
+	},
+	
+	/* c8 ignore start */
+	cleanupCache(cacheFolder, cacheDuration) {
+		
+		fs.readdir(cacheFolder, (err, files) => {
+			
+			if (err) {
+				console.log(`Error reading directory: ${err}`)
+				return
+			}
+			
+			files.forEach(file => {
+				if(path.extname(file) === '.cache') {
+					const filePath = path.join(cacheFolder, file)
+					fs.stat(filePath, (err, stats) => {
+						if (err) {
+							console.log(`Error getting stats of file: ${err}`)
+							return
+						}
+						const fileAgeInMilliseconds = new Date() - stats.birthtime
+						const fileAgeInDays = fileAgeInMilliseconds / (1000 * 60 * 60 * 24)
+						if (fileAgeInDays > cacheDuration) {
+							fs.unlink(filePath, err => {
+								if (err) {
+									console.log(`Error deleting file: ${err}`)
+									return
+								}
+							})
+						}
+					})
+				}
+			})
+		})
 	}
-  
-}
+	/* c8 ignore end */
 
-function parseExpiration(expiration) {
-	
-	if (typeof expiration !== 'string') {
-		throw new Error('Invalid input: Expiration must be a string');
-	}
-	
-	const units = {
-		y: 'years',
-		M: 'months',
-		w: 'weeks',
-		d: 'days',
-		h: 'hours',
-		m: 'minutes',
-		s: 'seconds'
-	}
-	
-	let exp_bits = expiration.split('')
-	
-	let unitKey = exp_bits.pop()
-	let unit = units[unitKey]
-	
-	if (!unit) {
-		throw new Error(`Invalid input: Unit '${unitKey}' is not valid`);
-	}
-	
-	let value = parseInt(exp_bits.join(''), 10)
-	
-	if (isNaN(value) || value <= 0) {
-		throw new Error('Invalid input: Value must be a positive number');
-	}
-	
-	return add(new Date(), { [unit]: value })
-	
 }
