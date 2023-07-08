@@ -6,6 +6,21 @@ export default {
 	category: 'Text',
 	processor(req) {
 		let [ search, replacement ] = req.params
-		return req.content.replaceAll(search, replacement);
+		
+		console.log({
+			search,
+			replacement
+		})
+		
+		//return req.content.replaceAll(search, replacement);
+		
+		const replacer = new RegExp(search, 'g')
+		
+		
+		return req.content.replace(replacer, replacement)
+		
+		
+		
+		
 	}
 }
