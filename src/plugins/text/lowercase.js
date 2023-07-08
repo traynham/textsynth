@@ -4,6 +4,7 @@ const lowercase = {
 	example: '{{lowercase: property.path}}',
 	usage: '{{lowercase: site.title}}',
 	category: 'Text',
+	aliases: ['lower', 'lc'],
 	processor({content}) {
 		if(typeof content !== 'string') return content
 		return content.toLowerCase()
