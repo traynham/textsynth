@@ -1,8 +1,20 @@
 export default {
 	name: 'random',
 	description: 'Selects a random element from an array or a random character from a string.',
-	example: '{{random: property.path}}',
-	usage: '{{random: site.categories}}',
+	_example: '{{random: property.path}}',
+	
+	examples: [
+		{
+			code: "[random fruits]",
+			result: 'Dragon // Assuming fruits is an array and also happens to include "dragon"'
+		},
+		{
+			code: "[random 'What letter will it pick?']",
+			result: 't'
+		},
+	],
+	
+	usage: '[random site.categories]',
 	category: 'Array/Text',
 	type: ['string', 'array'],
 	processor(req) {
