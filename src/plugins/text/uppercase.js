@@ -1,21 +1,43 @@
 export default {
+	
+	// Basic Information
 	name: 'uppercase',
-	description: 'Converts a string to uppercase.',
-	example: '{{uppercase: property.path}}',
-	usage: '{{uppercase: site.title}}',
+	aliases: ['upper', 'up'],
+	author: 'Jesse Traynham',
 	category: 'Text',
+	description: 'Converts a string to uppercase.',
+	kind: 'single',
+	syntax: '[uppercase: property.path]',
+	version: '1.0.0',
+
+	// Content and Params details
 	content: [
 		{
-			name: 'content',
-			type: 'any',
+			name: 'property.path',
+			type: 'string',
 			required: true,
-			description: 'The text to be transformed.'
+			description: 'The path of the property to convert to uppercase.'
 		}
 	],
-	type: 'string',
-	kind: 'single',
-	aliases: ['upper', 'up'],
+
+	// Examples for usage
+	examples: [
+		{
+			payload: { example: 'This is a sentence.' },
+			input: "[uppercase: example]",
+			output: "THIS IS A SENTENCE.",
+			note: 'This example converts the string "This is a sentence." to uppercase.'
+		},
+		{
+			payload: { site: { title: 'my website title' } },
+			input: "[uppercase: site.title]",
+			output: "MY WEBSITE TITLE",
+			note: 'This example converts the site title "my website title" to uppercase.'
+		}
+	],
+
 	processor(req) {
 		return req.content.toUpperCase()
 	}
+
 }
