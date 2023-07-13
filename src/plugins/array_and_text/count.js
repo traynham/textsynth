@@ -5,23 +5,27 @@
 
 export default {
 	name: 'count',
+	author: 'Jesse Traynham',
+	version: '1.0.0',
 	description: 'Counts the number of elements in an array, characters in a string, or occurrences of a specified value in the input.',
-	_example: '[count: property.path]',
 	examples: [
 		{
-			code: "[count 'This is 10']",
-			result: '10'
+			input: "[count 'This is 10']",
+			output: '10',
+			note: 'Counts the characters in a string.'
 		},
 		{
-			code: "[count found_array]",
-			result: '15 (Assuming there are 15 array items)'
+			input: "[count found_array]",
+			output: '15',
+			note: 'Counts the elements in an array, assuming there are 15 array items.'
 		},
 		{
-			code: "[count('t') 'This is a test']",
-			result: '2'
+			input: "[count('t') 'This is a test']",
+			output: '2',
+			note: 'Counts the occurrences of the letter "t" in the string.'
 		},
 	],
-	usage: '[count property], [count(query) property]',
+	syntax: '[count property], [count(query) property]',
 	type: ['string', 'array'],
 	category: 'Array/Text',
 	kind: 'single',
@@ -30,7 +34,7 @@ export default {
 			name: 'query',
 			type: 'string',
 			required: false,
-			description: 'String to filter with.'
+			description: 'The specific value to count in the input. If not provided, all elements or characters are counted.'
 		}
 	],
 	content: [
@@ -38,7 +42,7 @@ export default {
 			name: 'content',
 			type: 'any',
 			required: true,
-			description: 'The item be counted.'
+			description: 'The input where the count is performed. This can be a string or an array.'
 		}
 	],
 	processor(req) {
