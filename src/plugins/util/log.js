@@ -1,23 +1,41 @@
 export default {
+	
+	// Basic Information
 	name: 'log',
+	author: 'Jesse Traynham',
+	category: 'Util',
 	description: 'Logs a message value to the console.',
-	examples: [
+	kind: 'single',
+	syntax: "[log: 'Something amazing just happened!']",
+	version: '1.0.0',
+
+	// Content key
+	content: [
 		{
-			code: '[log: "Hello, World!"]',
-			result: 'Logs "Hello, World!" to the console',
-			comment: "Use the log plugin to log a string."
-		},
-		{
-			code: '[log: property.path]',
-			result: 'Logs the value of property.path to the console',
-			comment: "Use the log plugin to log the value of an object's property."
+			name: 'message',
+			type: 'string',
+			description: 'The message to log to the console.',
+			required: true
 		}
 	],
-	syntax: "[log: 'Something amazing just happened!']",
-	category: 'Util',
-	type: 'string',
-	kind: 'single',
+
+	// Examples for usage
+	examples: [
+		{
+			input: '[log: "Hello, World!"]',
+			note: "Use the log plugin to log a string.",
+			output: 'Logs "Hello, World!" to the console',
+		},
+		{
+			payload: {property: {path: 'propertyValue'}},
+			input: '[log: property.path]',
+			note: "Use the log plugin to log the value of an object's property.",
+			output: 'Logs the value of property.path to the console',
+		},
+	],
+
 	processor(req) {
 		return console.log(req.content)
 	}
+
 }
