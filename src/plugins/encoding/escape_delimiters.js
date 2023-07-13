@@ -1,21 +1,43 @@
 export default {
+	
+	// Basic Information
 	name: 'escape_delimiters',
-	description: 'Escapes TextSynth tag delimiters.',
-	usage: '[escape_delimiters: property.path]',
+	author: 'Jesse Traynham',
+	description: 'Escapes TextSynth tag delimiters in the provided content.',
+	version: '1.0.0',
+	category: 'Encoding',
+	kind: 'single',
+	syntax: '[escape_delimiters: property.path]',
+
+	// Content and Params details
+	content: [
+		{
+			name: 'content',
+			type: 'string',
+			required: true,
+			description: 'Content within which the delimiters need to be escaped.'
+		}
+	],
+
+	// Examples for usage
 	examples: [
 		{
-			code: `[escape_delimiters "[uppercase 'boom']"]`,
-			result: "&lbrack;uppercase 'boom'&rbrack;"
+			payload: "{ text: '[uppercase 'boom']' }",
+			input: '[escape_delimiters text]',
+			output: '&amp;lbrack;uppercase \'boom\'&amp;rbrack;',
+			note: 'The delimiters within the text have been replaced by their escape sequences.'
 		},
 	],
-	category: 'Encoding',
+
+	// Processor logic
 	processor(req) {
 		
-		let { raw, esc } = req.textMerger.delimiters
+		if(!req.content) { return }
+		if(typeof req.content !== 'string') { return }
 		
-		return req.content
-			.split(raw.start).join(esc.start)
-			.split(raw.end).join(esc.end)
+		let { raw, esc } = req.textMerger.delimiters
+		return req.content?.split(raw.start).join(esc.start).split(raw.end).join(esc.end)
 		
 	}
+	
 }
