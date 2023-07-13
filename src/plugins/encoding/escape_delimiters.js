@@ -32,8 +32,8 @@ export default {
 	// Processor logic
 	processor(req) {
 		
-		if(!req.content) { return }
-		if(typeof req.content !== 'string') { return }
+		if(!req.content) { return req.content }
+		if(typeof req.content !== 'string') { return req.content }
 		
 		let { raw, esc } = req.textMerger.delimiters
 		return req.content?.split(raw.start).join(esc.start).split(raw.end).join(esc.end)
