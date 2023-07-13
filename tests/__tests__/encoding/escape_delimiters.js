@@ -5,7 +5,8 @@ const textSynth = await TextSynth()
 
 // Test payload
 const payload = {
-	text: "[uppercase 'boom']"
+	text: "[uppercase 'boom']",
+	bad: []
 }
 
 // Turning off console.
@@ -18,9 +19,14 @@ describe('escape_delimiters plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe("&lbrack;uppercase 'boom'&rbrack;")  // Replace 'Magic' with the expected escaped string
 	})
 
-	// test('returns an empty string when the content is empty', () => {
-	// 	const input = "[escape_delimiters '']"
-	// 	expect(textSynth.merge(input, payload)).toBe('')
-	// })
+	test('returns an empty string when the content is empty', () => {
+		const input = "[escape_delimiters bogus]"
+		expect(textSynth.merge(input, payload)).toBe('undefined')
+	})
+	
+	test('returns an empty string when the content is null', () => {
+		const input = "[escape_delimiters bad]"
+		expect(textSynth.merge(input, payload)).toBe('')
+	})
 	
 })
