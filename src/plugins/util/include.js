@@ -3,24 +3,31 @@ import path from 'path'
 
 
 export default {
+	
+	// Basic Information
 	name: 'include',
-	kind: 'single',
+	author: 'Jesse Traynham',
 	category: 'Util',
 	description: 'Include a template partial from a specified file and merge it with the current template.',
-	usage: `[include: 'path/to/partial]`,
-	example: `[include: 'partials/header.synth']\nWelcome to our website!\n[include: 'partials/footer.synth']`,
+	kind: 'single',
+	syntax: "[include: 'path/to/partial']",
+	version: '1.0.0',
+	
+	// Examples for usage
+	examples: [
+		{
+			input: "[include: 'partials/header.synth']\nWelcome to our website!\n[include: 'partials/footer.synth']\n",
+			output: "Heder and footer text retrieved.",
+			note: "Include file content from partials."
+		},
+	],
+	
 	processor(req) {
-		
-		// console.log(
-		// 	'CONTENT::',
-		// 	req.content.length
-		// )
 		
 		// If no content is provided, throw an error
 		if (req.content.length === 0) {
 			console.log('No file specified for include tag')
 			return ''
-			//throw new Error('No file specified for include tag')
 		}
 		
 		// Add ".synth" extension to the file if it doesn't have any extension
@@ -32,13 +39,9 @@ export default {
 		if(path.extname(req.content) !== '.synth'){
 			console.log(`Include file has wrong extension: ${path.extname(req.content)}`)
 			return ''
-			// throw new Error(
-			// 	`Include file has wrong extension: ${path.extname(req.content)}`
-			// )
 		}
 		
 		let thePath = path.join(req.payload._synth.views, req.content)
-		
 		
 		// Check if the file is outside of the views folder for Express requests, and throw an error if it is
 			
