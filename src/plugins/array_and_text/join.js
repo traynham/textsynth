@@ -1,21 +1,47 @@
 export default {
+
 	name: 'join',
-	description: 'Joins the elements of an array with a specified separator.',
-	_example: '[join(", "): property.path]',
-	usage: '[join(delimiter) site.items]',
+	
+	author: 'Jesse Traynham',
+	category: 'Array/Text',
+	description: 'Joins the elements of an array with a specified separator. If no separator is specified, the elements are joined with a comma followed by a space.',
+	kind: 'single',
+	syntax: '[join(delimiter) array]',
+	type: ['array'],
+	version: '1.0.0',
+
+	content: [
+		{
+			name: 'content',
+			type: 'array',
+			required: true,
+			description: 'The array to be joined.'
+		}
+	],
+	params: [
+		{
+			name: 'delimiter',
+			type: 'string',
+			required: false,
+			description: 'The string used to separate the elements in the array. If not provided, a comma and a space are used as the default.'
+		}
+	],
 	
 	examples: [
 		{
-			code: "[join('-') site.items]",
-			result: '1-2-3 //Given that site.items is an array like [1,2,3]'
+			input: "[join('-') myNumbers]",
+			output: '1-2-3',
+			note: `Joins an array of numbers with a hyphen, assuming payload is \\{myNumbers: [1, 2, 3]}`
 		},
 		{
-			code: "[join(', ') fruit]",
-			result: `Apple, Orange, Grape //Given that site.items is an array like ['Apple', 'Organge', 'Grape']`
+			input: "[join(', ') myFruit]",
+			output: 'Apple, Orange, Grape',
+			note: `Joins an array of fruits with a comma and a space, assuming payload is {myFruit: ['Apple', 'Orange', 'Grape']}`
 		},
 		{
-			code: "[join(', ') fruit]",
-			result: `AppleOrangeGrape //Given that site.items is an array like ['Apple', 'Organge', 'Grape']`
+			input: "[join('') myFruit]",
+			output: 'AppleOrangeGrape',
+			note: "Joins an array of fruits with no separator, assuming payload is {myFruit: ['Apple', 'Orange', 'Grape']}"
 		}
 	],
 	
@@ -23,18 +49,6 @@ export default {
 		delimiter: ', ' // Default delimiter to use to join.
 	},
 	
-	params: [
-		{
-			name: 'delimiter',
-			type: 'string',
-			required: false,
-			description: 'String to join items with.'
-		}
-	],
-	
-	category: 'Array/Text',
-	kind: 'single',
-	type: ['array'],
 	processor(req){
 		
 		if (typeof req.content === 'string') {
