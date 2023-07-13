@@ -3,10 +3,27 @@ import fs from 'fs'
 import path from 'path'
 
 export default {
+	
+	// Basic Information
 	name: 'cache',
-	kind: 'container',
+	author: 'Jesse Traynham',
 	category: 'Util',
 	description: 'Automatically caches the content between the cache tags. If the same content is encountered again, the cached version is used. The cache is automatically invalidated and refreshed when the content changes. Optionally, old cache files can be cleaned up.',
+	kind: 'container',
+	syntax: "[cache] ... [/cache]",
+	version: '1.0.0',
+	
+	// Content and Params details
+	content: [
+		{
+			name: 'content',
+			type: 'any',
+			required: true,
+			description: 'The content to be cached.'
+		}
+	],
+	
+	// Examples for usage
 	examples: [
 		{
 			code: "[cache]This is some content to cache[/cache]",
@@ -14,12 +31,13 @@ export default {
 			comment: "The content will be cached."
 		}
 	],
+	
+	// Settings
 	settings: {
-		cacheFolder: './cache', // Directory to store cache files
-		cacheDuration: 7,  // Maximum age of cache files in days
-		cacheCleanup: false // Whether to always perform cleanup of old cache files
+		cacheFolder: './cache',  // Directory to store cache files
+		cacheDuration: 7,        // Maximum age of cache files in days
+		cacheCleanup: false      // Whether to always perform cleanup of old cache files
 	},
-	syntax: `[cache] ... [/cache]`,
 	
 	processor(req) {
 		
