@@ -2,12 +2,12 @@ export default {
 	
 	// Basic Information
 	name: 'lowercase',
+	aliases: 'lower',
 	author: 'Jesse Traynham',
 	category: 'Text',
 	description: 'Converts a string to lowercase.',
 	kind: 'single',
 	syntax: '[lowercase: property.path]',
-	aliases: ['lower', 'lc'],
 	version: '1.0.0',
 
 	// Content and Params details
