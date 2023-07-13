@@ -647,7 +647,7 @@ class TextMerger {
 				? paramsStr[0]
 					.split(/,(?=(?:[^"']*["'][^"']*["'])*[^"']*$)/)
 					.map((param) => {
-						param = param.trim().replace(/^["']+|["']+$/g, '');
+						//param = param.trim().replace(/^["']+|["']+$/g, '');
 						if (param.toLowerCase() === 'true') return true;
 						if (param.toLowerCase() === 'false') return false;
 						return param;
@@ -693,6 +693,8 @@ class TextMerger {
 			values: []
 		}
 		
+//		console.log('CHUNKS::', chunks)
+		
 		// Looping through each argument chunk
 		chunks.forEach(arg => {
 			
@@ -713,7 +715,8 @@ class TextMerger {
 				cargo.id = arg.slice(1)
 			} else {
 				// If the argument does not match any of the above conditions, it's considered an "other value". Remove any surrounding quotes and add it to the otherValues array.
-				cargo.values.push(arg.trim().replace(/^['"]|['"]$/g, ''))
+				//cargo.values.push(arg.trim().replace(/^['"]|['"]$/g, ''))
+				cargo.values.push(arg.trim()) //.replace(/^['"]|['"]$/g, ''))
 			}
 			
 		})
@@ -738,27 +741,20 @@ class TextMerger {
 	 *
 	 * This function supports complex nested paths in the form of string-based property paths, e.g., 'prop1.prop2[0].prop3'.
 	 */
-	_getValueFromPath(path, obj) {
-/*		
-		// isUndefined
-		if(path === undefined){ return '' }
+	_getValueFromPath(path, object) {
 		
-		// isArray
-		if(Array.isArray(path)){ return path}
-		
-		// isObject
-		if(typeof path === 'object'){ return path }
-		
-		// isString
-		if (/^["'].*["']$/.test(path)) { return path.slice(1, -1) }
-*/	
-		// isBOOLEAN
-		if (typeof path === 'string') {
-			if (path.toLowerCase() === 'true') {
+		// IF LITERAL STRING RETURN WITHOUT QUOTES.
+		if (typeof path === 'string' && /^["'].*["']$/.test(path.trim() )) { 
+			
+			let destrung = path.trim().slice(1, -1)
+			
+			if (destrung.toLowerCase() === 'true') {
 				return true;
-			} else if (path.toLowerCase() === 'false') {
+			} else if (destrung.toLowerCase() === 'false') {
 				return false;
-			} 
+			}
+			
+			return path.trim().slice(1, -1)
 		}
 		
 		// isNumber
@@ -767,11 +763,7 @@ class TextMerger {
 		}
 		
 		// Default case: treat path as a string representing a property path
-		const value = path.split(/[.[\]]+/).reduce((o, i) => (i && o ? o[i] : undefined), obj)
-		
-		if(value == undefined){
-			return path
-		}
+		const value = path.split('.').reduce((obj, i) => (obj?.[i]), object)
 		
 		// Return a shallow copy of the array if it's an array, or return the value directly
 		return Array.isArray(value) ? [...value] : value
