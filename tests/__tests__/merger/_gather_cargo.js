@@ -17,7 +17,7 @@ describe('_gather_cargo method', () => {
 			attributes: { tess: 'ting' },
 			classes: [ 'myClass' ],
 			id: 'myId',
-			values: [ 'plainValue', 'testKey' ],
+			values: [ '"plainValue"', 'testKey' ],
 			params: [ 'plainValue', 'testValue' ]
 		})
 		
@@ -59,7 +59,7 @@ describe('_gather_cargo method', () => {
 		
 	})
 
-	test('handles args with only values', () => {
+	test('handles undefined args in payload', () => {
 		
 		const args = 'plainValue'
 		
@@ -70,7 +70,23 @@ describe('_gather_cargo method', () => {
 			classes: [],
 			id: '',
 			values: ['plainValue'],
-			params: ['plainValue']
+			params: [undefined]
+		})
+		
+	})
+	
+	test('handles single arg in payload', () => {
+		
+		const args = 'testKey'
+		
+		const result = textSynth._gather_cargo(args, payload)
+		
+		expect(result).toEqual({
+			attributes: {},
+			classes: [],
+			id: '',
+			values: ['testKey'],
+			params: ['testValue']
 		})
 		
 	})
