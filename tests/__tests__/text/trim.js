@@ -9,6 +9,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('trim plugin', () => {
 
 	test('returns a string with leading and trailing whitespace removed', () => {
@@ -16,9 +19,9 @@ describe('trim plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('this is a test string')
 	})
 
-	// test('throws an error when trying to trim a non-string', () => {
-	// 	const input = "[trim nonString]"
-	// 	expect(() => textSynth.merge(input, payload)).toThrow(TypeError)
-	// })
+	test('throws an error when trying to trim a non-string', () => {
+		const input = "[trim nonString]"
+		expect(textSynth.merge(input, payload)).toBe(String(payload.nonString))
+	})
 	
 })
