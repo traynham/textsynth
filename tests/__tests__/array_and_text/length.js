@@ -6,7 +6,8 @@ const textSynth = await TextSynth()
 // Test payload
 const payload = {
 	testString: 'This is 10',
-	foundArray: Array(15).fill('item')
+	foundArray: Array(15).fill('item'),
+	empty: []
 }
 
 // Turning off console.
@@ -24,14 +25,14 @@ describe('length plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('15')
 	})
 
-	// test('returns 0 when the string is empty', () => {
-	// 	const input = "[length '']"
-	// 	expect(textSynth.merge(input, payload)).toBe('0')
-	// })
+	test('returns 0 when the string is empty', () => {
+		const input = "[length '']"
+		expect(textSynth.merge(input, payload)).toBe('0')
+	})
 
-	// test('returns 0 when the array is empty', () => {
-	// 	const input = "[length []]"
-	// 	expect(textSynth.merge(input, payload)).toBe('0')
-	// })
+	test('returns 0 when the array is empty', () => {
+		const input = "[length empty]"
+		expect(textSynth.merge(input, payload)).toBe('0')
+	})
 	
 })
