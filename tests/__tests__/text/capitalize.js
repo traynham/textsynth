@@ -10,6 +10,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('capitalize plugin', () => {
 
 	test('capitalizes the first letter of a string', () => {
@@ -22,9 +25,9 @@ describe('capitalize plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('')
 	})
 
-	// test('returns the original content if it is not a string', () => {
-	// 	const input = "[capitalize nonString]"
-	// 	expect(textSynth.merge(input, payload)).toBe('12345')
-	// })
+	test('returns the original content if it is not a string', () => {
+		const input = "[capitalize nonString]"
+		expect(textSynth.merge(input, payload)).toBe('12345')
+	})
 	
 })
