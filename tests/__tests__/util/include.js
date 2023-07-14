@@ -5,13 +5,14 @@ import TextSynth from '../index.js'
 const textSynth = await TextSynth()
 textSynth.setDelimiters({ opener: '[', closer: ']' })
 
-console.log = () => {}
-
 const payload = {
   _synth: {
 	views: './tests/support/views'
   }
 }
+
+// Turning off console.
+console.log = () => {}
 
 describe('include plugin', () => {
 	
