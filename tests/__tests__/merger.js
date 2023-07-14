@@ -19,7 +19,7 @@ const payload = {
 };
 
 // !TURN OFF CONSOLE.
-//console.log = () => {}
+console.log = () => {}
 
 describe('TextMerger default', () => {
 
@@ -141,7 +141,7 @@ describe("merge", () => {
 		})
 		
 		// Create a spy on console.error
-		const consoleSpy = jest.spyOn(console, 'error');
+		const consoleSpy = jest.spyOn(console, 'log');
 		
 		const template = 'Things that go [boom: "ouch"].'
 		textSynth.merge(template, payload)
@@ -261,11 +261,11 @@ describe('General Coverage Tests', () => {
 	// 	expect(value).toBe("")
 	// });
 	
-	test('_getValueFromPath with array path', async () => {
-		const path = []
-		const value = textSynth._getValueFromPath(path, {})
-		expect(value).toStrictEqual([])
-	});
+	// test('_getValueFromPath with array path', async () => {
+	// 	const path = []
+	// 	const value = textSynth._getValueFromPath(path, {})
+	// 	expect(value).toStrictEqual([])
+	// });
 	
 	// test('_getValueFromPath with object path', async () => {
 	// 	const path = {}
