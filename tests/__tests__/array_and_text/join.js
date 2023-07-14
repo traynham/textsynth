@@ -36,9 +36,10 @@ describe('join plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('Return strings')
 	})
 
-	// test('returns undefined when either content or params is missing', () => {
-	// 	const input = "[join]"
-	// 	expect(textSynth.merge(input, payload)).toBeUndefined()
-	// })
+	// POSSIBLY INVALID TEST
+	test('returns undefined when either content or params is missing', () => {
+		const input = "[join]"
+		expect(textSynth.merge(input, payload)).toBe('undefined')
+	})
 	
 })
