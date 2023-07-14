@@ -10,6 +10,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('lowercase plugin', () => {
 
 	test('converts a string to lowercase', () => {
@@ -26,4 +29,5 @@ describe('lowercase plugin', () => {
 		const input = "[lowercase nonString]"
 		expect(textSynth.merge(input, payload)).toBe('12345')
 	})
+	
 })
