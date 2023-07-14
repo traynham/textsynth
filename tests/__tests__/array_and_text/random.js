@@ -1,4 +1,4 @@
-import { describe, expect, test, jest } from '@jest/globals'
+import { describe, expect, test, jest, beforeEach, afterEach } from '@jest/globals'
 import TextSynth from '../index.js'
 
 const textSynth = await TextSynth()
