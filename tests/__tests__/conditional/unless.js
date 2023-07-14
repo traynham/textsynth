@@ -26,14 +26,14 @@ describe('unless plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('')
 	})
 
-	// test('renders content when the condition is undefined', () => {
-	// 	const input = "[unless isUndefined]Condition is undefined.[/unless]"
-	// 	expect(textSynth.merge(input, payload)).toBe('Condition is undefined.')
-	// })
+	test('renders content when the condition is undefined', () => {
+		const input = "[unless isUndefined]Condition is undefined.[/unless]"
+		expect(textSynth.merge(input, payload)).toBe('Condition is undefined.')
+	})
 
-	// test('renders content when the condition is null', () => {
-	// 	const input = "[unless isNull]Condition is null.[/unless]"
-	// 	expect(textSynth.merge(input, payload)).toBe('Condition is null.')
-	// })
+	test('renders content when the condition is null', () => {
+		const input = "[unless isNull]Condition is null.[/unless]"
+		expect(textSynth.merge(input, payload)).toBe('Condition is null.')
+	})
 
 })
