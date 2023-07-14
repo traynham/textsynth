@@ -158,7 +158,7 @@ class TextMerger {
 			const template = fs.readFileSync(thePath, 'utf-8')
 			return await this.merge(template, payload)
 		} catch (error) {
-			console.error('Error rendering file:', error)
+			console.log('Error rendering file:', error)
 			return `Error rendering file: ${error}`
 		}
 		
@@ -433,7 +433,7 @@ class TextMerger {
 				try {
 					cargo = plugin.processor(request)
 				} catch (e) {
-					console.error(`Error running "${name}" plugin: ${e}`)
+					console.log(`Error running "${name}" plugin: ${e}`)
 				}
 				
 			}
@@ -758,8 +758,8 @@ class TextMerger {
 		}
 		
 		// isNumber
-		if (!isNaN(+path) || path === '0') { 
-			return path
+		if (!isNaN(+path) || path === '0') {
+			return +path
 		}
 		
 		// Default case: treat path as a string representing a property path
