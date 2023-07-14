@@ -30,9 +30,9 @@ describe('replace plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('This is a --- test')
 	})
 
-	// test('throws an error when replacing a non-string', () => {
-	// 	const input = "[replace(' ', '-') nonString]"
-	// 	expect(() => textSynth.merge(input, payload)).toThrow(TypeError)
-	// })
+	test('throws an error when replacing a non-string', () => {
+		const input = "[replace(' ', '-') nonString]"
+		expect(textSynth.merge(input, payload)).toBe(String(payload.nonString))
+	})
 
 })
