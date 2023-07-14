@@ -26,14 +26,14 @@ describe('stringify plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 
-	// test('returns an empty string when the content is null', () => {
-	// 	const input = "[stringify null]"
-	// 	expect(textSynth.merge(input, payload)).toBe('null')
-	// })
-
-	// test('returns an empty string when the content is undefined', () => {
-	// 	const input = "[stringify undefined]"
-	// 	expect(textSynth.merge(input, payload)).toBe('')
-	// })
+	test('returns an empty string when the content is null', () => {
+		const input = "[stringify null]"
+		expect(textSynth.merge(input, payload)).toBe('undefined')
+	})
+ 
+	test('returns undefined when the content is undefined', () => {
+		const input = "[stringify bogus]"
+		expect(textSynth.merge(input, payload)).toBe('undefined')
+	})
 	
 })
