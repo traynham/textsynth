@@ -22,15 +22,5 @@ describe('markdown plugin', () => {
 		const expectedOutput = `<h2>Header 2</h2>\n<p><strong>Bold Text</strong>\n<em>Italic Text</em></p>\n`
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
-
-	// test('returns null when the content is null', () => {
-	// 	const input = "[markdown data.null]"
-	// 	expect(textSynth.merge(input, payload)).toBe('null')
-	// })
-
-	// test('returns an empty string when the content is undefined', () => {
-	// 	const input = "[markdown data.undefined]"
-	// 	expect(textSynth.merge(input, payload)).toBe('')
-	// })
 	
 })
