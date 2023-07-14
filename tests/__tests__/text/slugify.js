@@ -10,6 +10,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('slugify plugin', () => {
 
 	test('converts a string into a URL-friendly slug', () => {
