@@ -3,6 +3,9 @@ import TextSynth from '../index.js'
 
 const textSynth = await TextSynth()
 
+// Turning off console.
+console.log = () => {}
+
 describe('_findClosingTagIndex method', () => {
 
 	test('finds closing tag index correctly', () => {
