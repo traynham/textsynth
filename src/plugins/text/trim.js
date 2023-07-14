@@ -30,6 +30,7 @@ export default {
 	],
 
 	processor({content}) {
+		if(typeof content !== 'string') return content
 		return content.trim()
 	}
 
