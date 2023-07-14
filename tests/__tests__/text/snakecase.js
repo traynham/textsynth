@@ -10,6 +10,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('snakecase plugin', () => {
 
 	test('converts a camelCase string to snake_case', () => {
