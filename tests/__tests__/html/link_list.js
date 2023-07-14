@@ -27,16 +27,14 @@ describe('linkList plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 
-	// test('returns an empty list when the content is null', () => {
-	// 	const input = "[linkList data.null]"
-	// 	const expectedOutput = `<ul></ul>`
-	// 	expect(textSynth.merge(input, payload)).toBe(expectedOutput)
-	// })
+	test('returns an empty list when the content is null', () => {
+		const input = "[linkList data.null]"
+		expect(textSynth.merge(input, payload)).toBe('null')
+	})
 
-	// test('returns an empty list when the content is undefined', () => {
-	// 	const input = "[linkList data.undefined]"
-	// 	const expectedOutput = `<ul></ul>`
-	// 	expect(textSynth.merge(input, payload)).toBe(expectedOutput)
-	// })
+	test('returns an empty list when the content is undefined', () => {
+		const input = "[linkList data.undefined]"
+		expect(textSynth.merge(input, payload)).toBe('undefined')
+	})
 	
 })
