@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest --verbose --config .jest.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest --config .jest.js",
+    "testv": "node --experimental-vm-modules node_modules/jest/bin/jest --verbose --config .jest.js",
     "express_example": "nodemon examples/express/index.js",
     "merge_docs": "./node_modules/.bin/jsdoc2md src/merger.js > docs/merger.md"
   },
