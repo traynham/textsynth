@@ -49,9 +49,13 @@ export default {
 	],
 
 	processor(req) {
+		
+		if(typeof req.content !== 'string') return req.content
+		
 		const [ search, replacement ] = req.params
 		const replacer = new RegExp(search, 'g')
 		return req.content.replace(replacer, replacement)
+		
 	}
 	
 }
