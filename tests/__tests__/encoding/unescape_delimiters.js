@@ -14,7 +14,7 @@ const payload = {
 }
 
 // Turning off console.
-console.log = () => {}
+//console.log = () => {}
 
 describe('unescape_delimiters plugin', () => {
 
@@ -29,14 +29,14 @@ describe('unescape_delimiters plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe(payload.data.unEscContent)
 	})
 
-	// test('returns null when the content is null', () => {
-	// 	const input = "[unescape_delimiters data.null]"
-	// 	expect(textSynth.merge(input, payload)).toBe('null')
-	// })
+	test('returns null when the content is null', () => {
+		const input = "[unescape_delimiters data.null]"
+		expect(textSynth.merge(input, payload)).toBe('null')
+	})
 
-	// test('returns an empty string when the content is undefined', () => {
-	// 	const input = "[unescape_delimiters data.undefined]"
-	// 	expect(textSynth.merge(input, payload)).toBe('')
-	// })
+	test('returns an empty string when the content is undefined', () => {
+		const input = "[unescape_delimiters data.undefined]"
+		expect(textSynth.merge(input, payload)).toBe('undefined')
+	})
 	
 })
