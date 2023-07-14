@@ -57,6 +57,12 @@ export default {
 		this.end = request.textMerger.delimiters.enc.end
 		
 		const layoutPath = path.join(request.payload._synth.views, request.params[0])
+		
+		// Check if file exists before reading it
+		if (!fs.existsSync(layoutPath)) {
+			return `ERROR: Layout file does not exist: ${layoutPath}`
+		}
+		
 		const layoutContent = fs.readFileSync(layoutPath, 'utf-8')
 		const childContent = request.content
 		
