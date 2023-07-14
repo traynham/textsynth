@@ -29,6 +29,7 @@ export default {
 	],
 
 	processor({content}) {
+		if(typeof content !== 'string') { return content }
 		return content.charAt(0).toUpperCase() + content.slice(1);
 	}
 	
