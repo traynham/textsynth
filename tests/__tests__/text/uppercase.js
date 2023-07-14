@@ -9,6 +9,9 @@ const payload = {
 	mixedcaseString: 'This IS a Test'
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('uppercase plugin', () => {
 
 	test('converts a lowercase string to uppercase', () => {
@@ -25,4 +28,5 @@ describe('uppercase plugin', () => {
 		const input = "[uppercase 'HELLO']"
 		expect(textSynth.merge(input, payload)).toBe('HELLO')
 	})
+	
 })
