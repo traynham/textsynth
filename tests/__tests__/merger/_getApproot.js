@@ -4,6 +4,9 @@ import process from 'process'
 import { describe, expect, jest, test } from '@jest/globals'
 import TextSynth from '../index.js'
 
+// Turning off console.
+console.log = () => {}
+
 describe('_getAppRoot method', () => {
   
   test('returns correct directory if node_modules is present', async () => {
