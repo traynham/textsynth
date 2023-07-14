@@ -43,6 +43,7 @@ export default {
 	],
 
 	processor(req) {
+		if(typeof req.content !== 'string') return req.content
 		return req.content.repeat(parseInt(req.params[0]))
 	}
 }
