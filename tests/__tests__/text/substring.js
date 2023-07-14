@@ -9,6 +9,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('substring plugin', () => {
 
 	test('returns a substring from the specified start and end indices', () => {
