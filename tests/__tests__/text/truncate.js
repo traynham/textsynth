@@ -9,6 +9,9 @@ const payload = {
 	shortString: 'Short string'
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('truncate plugin', () => {
 
 	test('returns a string truncated to the specified length with a default suffix', () => {
@@ -25,4 +28,5 @@ describe('truncate plugin', () => {
 		const input = "[truncate(50) shortString]"
 		expect(textSynth.merge(input, payload)).toBe('Short string')
 	})
+	
 })
