@@ -5,6 +5,9 @@ import TextSynth from '../index.js'
 const textSynth = await TextSynth()
 const payload = { testKey: 'testValue' }
 
+// Turning off console.
+console.log = () => {}
+
 describe('_gather_cargo method', () => {
 	
 	test('correctly gathers cargo', () => {
