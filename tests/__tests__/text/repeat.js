@@ -10,6 +10,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('repeat plugin', () => {
 
 	test('repeats a string a specified number of times', () => {
@@ -22,9 +25,9 @@ describe('repeat plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('')
 	})
 
-	// test('throws an error when repeating a non-string', () => {
-	// 	const input = "[repeat(3) nonString]"
-	// 	expect(() => textSynth.merge(input, payload)).toThrow(TypeError)
-	// })
+	test('throws an error when repeating a non-string', () => {
+		const input = "[repeat(3) nonString]"
+		expect(textSynth.merge(input, payload)).toBe(String(payload.nonString))
+	})
 	
 })
