@@ -37,6 +37,8 @@ export default {
 
 	processor(req) {
 		
+		if(!req.content) { return req.content }
+		
 		const listItems = Object.entries(req.content)
 			.map(([name, url]) => `<li><a href="${url}">${name}</a></li>`)
 			.join('');
