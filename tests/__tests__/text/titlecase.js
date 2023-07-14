@@ -9,6 +9,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('titlecase plugin', () => {
 
 	test('returns a string with each word capitalized', () => {
