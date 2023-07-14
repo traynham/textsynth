@@ -9,6 +9,9 @@ const payload = {
 	nonString: 12345
 }
 
+// Turning off console.
+console.log = () => {}
+
 describe('camelCase plugin', () => {
 
 	test('converts a string to camelCase', () => {
