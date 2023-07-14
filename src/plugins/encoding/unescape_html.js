@@ -29,6 +29,8 @@ export default {
 	
 	processor(req) {
 		
+		if(!req.content) { return req.content }
+		
 		let escapeCodes = {
 			'&': '&amp;',
 			'<': '&lt;',
