@@ -9,7 +9,8 @@ const payload = {
 	foundArray: Array(15).fill('item'),
 	qarray: ['a', 'b', 'c', 'a'],
 	testStringWithChar: 'This is a test',
-	anObj: {name: 'Bob'}
+	anObj: {name: 'Bob'},
+	num: 123
 }
 
 // Turning off console.
@@ -27,13 +28,8 @@ describe('count plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('15')
 	})
 
-	test('counts the occurrences of a specified character in a string', () => {
+	test('counts the occurrences of a specified character in a string!', () => {
 		const input = "[count('t') testStringWithChar]"
-		expect(textSynth.merge(input, payload)).toBe('2')
-	})
-	
-	test('counts the occurrences of a specified character in a string, without quotes', () => {
-		const input = "[count(t) testStringWithChar]"
 		expect(textSynth.merge(input, payload)).toBe('2')
 	})
 	
@@ -47,8 +43,14 @@ describe('count plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('2')
 	})
 
-	// test('returns the input as is when it is not a string or array', () => {
-	// 	const input = "[count 123]"
-	// 	expect(textSynth.merge(input, payload)).toBe('123')
-	// })
+	test('returns the input as is when it is not a string or array', () => {
+		const input = "[count num]"
+		expect(textSynth.merge(input, payload)).toBe('123')
+	})
+	
+	test('returns the input as is when it is not a string or array', () => {
+		const input = "[count 123456789]"
+		expect(textSynth.merge(input, payload)).toBe('123456789')
+	})
+	
 })
