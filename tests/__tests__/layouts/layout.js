@@ -44,12 +44,10 @@ describe('layout plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 	
-	
-
-	// test('Throws error if layout file not found', () => {
-	// 	const input = `[layout "missing.synth"] [block_set "title"]Page Title[/block_set] [block_set "body"]Page content[/block_set] [/layout]`
-	// 	
-	// 	expect(() => textSynth.merge(input, payload)).toThrow()
-	// })
+	test('Throws error if layout file not found', () => {
+		const input = `[layout "missing.synth"] [block_set "title"]Page Title[/block_set] [block_set "body"]Page content[/block_set] [/layout]`
+		const output = textSynth.merge(input, payload)
+		expect(output).toMatch(/^ERROR: Layout file does not exist:/)
+	})
 	
 })
