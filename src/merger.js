@@ -153,14 +153,15 @@ class TextMerger {
 			thePath = filePath
 		}
 		
-		// MERGE
-		try {
-			const template = fs.readFileSync(thePath, 'utf-8')
-			return await this.merge(template, payload)
-		} catch (error) {
-			console.log('Error rendering file:', error)
-			return `Error rendering file: ${error}`
+		if(!fs.existsSync(thePath)){
+			let nicePath = thePath.replace(this._getAppRoot(), '')
+			console.log(`ERROR: Merge path "${nicePath}" does not exist`)
+			return `ERROR: Merge path "${nicePath}" does not exist`
 		}
+		
+		// MERGE
+		const template = fs.readFileSync(thePath, 'utf-8')
+		return await this.merge(template, payload)
 		
 	}
 	
@@ -488,6 +489,10 @@ class TextMerger {
 				const closingTag = `${this.opener_raw}/${processors[0].name}${this.closer_raw}`;
 				const closingIndex = this._findClosingTagIndex(output, match.index, processors[0].name)
 				
+				if (closingIndex === -1) {
+					return `ERROR: The closing tag for "${processors[0]?.name}" is missing. Please ensure that all tags are properly closed.`
+				}
+				
 				const content = output.substring(match.index + fullMatch.length, closingIndex)
 				
 				let processedContent = content; // Do not process nested containers at this point
@@ -567,9 +572,7 @@ class TextMerger {
 			const closingIndex = this._findNextIndex(input, closingTagPattern, index + this.opener_raw.length + tagName.length + 1) // +1 for the "/"
 			
 			if (closingIndex === -1) {
-				throw new Error(
-					`No matching closing tag found for ${this.opener_raw}${tagName}${this.closer_raw}`
-				)
+				return -1
 			} else if (openingIndex === -1 || closingIndex < openingIndex) {
 				count--
 				index = closingIndex
