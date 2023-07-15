@@ -51,7 +51,6 @@ class TextMerger {
 			this.custom_plugins = options.plugins
 		}
 		
-// NEED A MORE DESCRIPTIVE NAME!!!
 		if(options.verbose){
 			this.verbose = options.verbose
 		}
@@ -188,34 +187,9 @@ class TextMerger {
 		return processed
 		
 	}
-	
-	/*
-	pluginSettings(pluginName, settingName, value) {
-		
-		// Check if the plugin exists
-		if (!this.tags[pluginName]) {
-			//throw new Error(`Plugin ${pluginName} does not exist.`);
-			console.log(`Plugin Settings: Plugin ${pluginName} does not exist.`)
-			return
-		}
-	
-		// If the plugin doesn't have a settings object, create one
-		if (!this.tags[pluginName].settings) {
-			this.tags[pluginName].settings = {};
-		}
-	
-		// If a value is provided, set the setting
-		if (value !== undefined) {
-			this.tags[pluginName].settings[settingName] = value;
-		}
-	
-		// Return the current setting value
-		return this.tags[pluginName].settings[settingName];
-	}
-*/
 
 	pluginSettings(pluginName, settingsObj) {
-// SHOULD I RETURN AN ERROR
+		
 		// Check if the plugin exists
 		if (!this.tags[pluginName]) {
 			console.error(`Plugin ${pluginName} does not exist.`); 
@@ -638,9 +612,6 @@ class TextMerger {
 			return { kind: 'single', processors: [], name: tags, cargo: this._getValueFromPath(tags.trim(), payload) }
 		}
 		
-//		let cargo = cargoStr.split(/,(?=(?:[^"']*["'][^"']*["'])*[^"']*$)/)
-//				.map(cont => this._getValueFromPath(cont.trim(), payload))
-		
 		const tagParamPairs = tags.match(/[\w]+(\([^)]*\))?/g)
 		const processors = tagParamPairs.map((tagParamPair) => {
 			
@@ -696,8 +667,6 @@ class TextMerger {
 			values: []
 		}
 		
-//		console.log('CHUNKS::', chunks)
-		
 		// Looping through each argument chunk
 		chunks.forEach(arg => {
 			
@@ -718,7 +687,6 @@ class TextMerger {
 				cargo.id = arg.slice(1)
 			} else {
 				// If the argument does not match any of the above conditions, it's considered an "other value". Remove any surrounding quotes and add it to the otherValues array.
-				//cargo.values.push(arg.trim().replace(/^['"]|['"]$/g, ''))
 				cargo.values.push(arg.trim()) //.replace(/^['"]|['"]$/g, ''))
 			}
 			
@@ -726,7 +694,7 @@ class TextMerger {
 		
 		
 		cargo.params = cargo.values.map(param => {
-			return this._getValueFromPath(param, payload) // || param
+			return this._getValueFromPath(param, payload)
 		})
 		
 		// Return the populated cargo object
