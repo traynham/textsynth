@@ -1,5 +1,4 @@
 import fs from 'fs'
-//import path from 'path'
 import process from 'process'
 import { describe, expect, jest, test } from '@jest/globals'
 import TextSynth from '../index.js'
@@ -28,9 +27,11 @@ describe('_getAppRoot method', () => {
 	// Reset the mocks
 	process.cwd = originalCwd
 	fs.readdirSync = originalReaddirSync
+	
   })
 
   test('returns null if no parent directory with node_modules is found', async () => {
+
 	const textSynth = await TextSynth()
 
 	const originalCwd = process.cwd
@@ -49,5 +50,7 @@ describe('_getAppRoot method', () => {
 	// Reset the mocks
 	process.cwd = originalCwd
 	fs.readdirSync = originalReaddirSync
+	
   })
+  
 })
