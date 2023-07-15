@@ -15,12 +15,15 @@ describe('_findClosingTagIndex method', () => {
 		const result = textSynth._findClosingTagIndex(input, startIndex, tagName)
 		expect(result).toBe(12) // The index of the closing tag in the provided string
 	})
-
-	test('throws error when no closing tag is found', () => {
-		const input = '[tag]content'
-		const startIndex = 0
-		const tagName = 'tag'
-		expect(() => textSynth._findClosingTagIndex(input, startIndex, tagName)).toThrow()
+	
+	test("unmatched tag should return error to end user", () => {
+		
+		const template = '[markdown]# header'
+		
+		expect(textSynth.merge(template)).toBe(
+			'ERROR: The closing tag for "markdown" is missing. Please ensure that all tags are properly closed.'
+		)
+		
 	})
 
 	test('handles nested tags correctly', () => {
