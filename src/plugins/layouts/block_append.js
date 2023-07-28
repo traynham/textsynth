@@ -34,12 +34,23 @@ export default {
 			output: 'The output depends on the initial content of the block in the layout.',
 			note: 'This example appends additional content to a block named "header".'
 		}
-	]
-	
-	// PROCESSING LOGIC IS COVERED IN THE LAYOUT PLUGIN.
+	],
 
-	// The block_append tag does not need to do any processing on its own,
-	// it's more about how it's used in a layout plugin.
-	// The actual appending operation is handled by the layout plugin.
+	processor({ content, params, payload, textMerger}) {
+		
+		// GET THE BLOCK NAME FROM THE PARAMS
+		const blockName = params[0]
+		
+		// ACCESS THE CURRENT LAYOUT BY GETTING THE TOP ITEM FROM THE LAYOUT STACK
+		let currentLayout = textMerger.layoutStack[textMerger.layoutStack.length - 1]
+		
+		// APPEND PROCESSED CONTENT TO THE CURRENT BLOCK. IF THE BLOCK DOES NOT EXIST,
+		// IT CREATES A NEW BLOCK WITH THE PROCESSED CONTENT.
+		currentLayout[blockName] = currentLayout[blockName] + textMerger.process(content, payload)
+		
+		// SINCE THIS IS A BLOCK_APPEND PROCESSOR, IT DOESN'T NEED TO RETURN ANY CONTENT 
+		// FOR THE CURRENT PROCESSING STAGE, HENCE IT RETURNS AN EMPTY STRING.
+		return ''
+	}
 
 }
