@@ -1,9 +1,10 @@
 export default {
 	
 	// Basic Information
-	name: 'div',
+	name: 'html_tag',
 	author: 'Jesse Traynham',
 	category: 'HTML',
+	aliases: ['a', 'div', 'p', 'ul', 'li'],
 	description: 'Generates a div tag with optional attributes, classes and id. All the additional arguments will be treated as HTML attributes and added to the div tag.',
 	kind: 'container',
 	syntax: '[div: attribute="value" .class #id]content[/div]',
@@ -44,22 +45,23 @@ export default {
 	],
 	
 	processor(req) {
-	
-		let attr = {...req.cargo.attributes}
+		
+		let tag = this.alias || 'div'
+		let attr = {...req.cargo?.attributes}
 		
 		// CLASSES
-		if(req.cargo.classes){ attr.class = req.cargo.classes.join(' ') }
+		if(req.cargo?.classes.length){ attr.class = req.cargo.classes.join(' ') }
 		
 		// ID
-		if(req.cargo.id){ attr.id = req.cargo.id }
+		if(req.cargo?.id){ attr.id = req.cargo?.id }
 		
 		const attributeString = [
 			'',
 			...Object.entries(attr).map(([key, value]) => `${key}="${value}"`),
-			...req.cargo.values
+			...req.cargo?.values || []
 		].join(' ')
 		
-		let out = `<div${attributeString}>${req.content}</div>`
+		let out = `<${tag}${attributeString}>${req.content}</${tag}>`
 		
 		return out
 		
