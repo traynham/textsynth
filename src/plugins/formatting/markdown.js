@@ -14,6 +14,7 @@ export default {
 	name: 'markdown',
 	author: 'Jesse Traynham',
 	category: 'Formatting',
+	aliases: ['md'],
 	description: 'Renders markdown content into HTML with additional support for attributes and Prism syntax highlighting.',
 	kind: 'container',
 	syntax: '[markdown] Your markdown text here [/markdown]',
