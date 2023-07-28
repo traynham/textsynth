@@ -35,11 +35,22 @@ export default {
 			note: 'This example prepends additional content to a block named "header".'
 		}
 	],
-
-	// PROCESSING LOGIC IS COVERED IN THE LAYOUT PLUGIN.
 	
-	// The block_prepend tag does not need to do any processing on its own,
-	// it's more about how it's used in a layout plugin.
-	// The actual prepending operation is handled by the layout plugin.
+	processor({ content, params, payload, textMerger}) {
+		
+		// EXTRACT THE BLOCK NAME FROM THE PARAMETERS PASSED IN
+		const blockName = params[0]
+		
+		// ACCESS THE MOST RECENT LAYOUT FROM THE STACK IN TEXTMERGER
+		let currentLayout = textMerger.layoutStack[textMerger.layoutStack.length - 1]
+		
+		// PREPEND PROCESSED CONTENT TO THE CURRENT BLOCK. IF THE BLOCK DOES NOT EXIST, 
+		// IT CREATES A NEW BLOCK WITH THE PROCESSED CONTENT.
+		currentLayout[blockName] = textMerger.process(content, payload) + currentLayout[blockName]
+		
+		// AS THIS IS A BLOCK_PREPEND PROCESSOR, IT DOESN'T NEED TO RETURN ANY CONTENT 
+		// FOR THE CURRENT PROCESSING STAGE, SO IT RETURNS AN EMPTY STRING.
+		return ''
+	}
 	
 }
