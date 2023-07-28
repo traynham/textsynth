@@ -20,12 +20,30 @@ const payload = {
 console.log = () => {}
 
 describe('layout plugin', () => {
+	
 	test('Replaces block placeholders with block content', () => {
 		const input = `[layout "main.synth"] [block_set "title"]Page Title[/block_set] [block_set "body"]Page content[/block_set] [/layout]`
 		const expectedOutput = '<title>Page Title</title>\n<div>Page content</div>'
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
-
+	
+	test('Use payload.page.block', () => {
+		
+		let payload = {
+			_synth: {
+				views: join(__dirname, './views')
+			},
+			layout: `
+				# [block: 'title']Default Title[/block]
+				[block: 'body']Default Body[/block]
+			`,
+		}
+		
+		const input = `---\nblock: "body"\n---\n[block_set "title"]Page Title[/block_set]This is the body`
+		const expectedOutput = '\n# Page Title\nThis is the body\n'
+		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
+	})
+	
 	test('Keeps default content if no block_set is provided', () => {
 		const input = `[layout "main.synth"] [/layout]`
 		const expectedOutput = '<title>Default Title</title>\n<div>Default body</div>'
@@ -48,6 +66,12 @@ describe('layout plugin', () => {
 		const input = `[layout "missing.synth"] [block_set "title"]Page Title[/block_set] [block_set "body"]Page content[/block_set] [/layout]`
 		const output = textSynth.merge(input, payload)
 		expect(output).toMatch(/^ERROR: Layout file does not exist:/)
+	})
+	
+	test('Block test', () => {
+		const input = `[block: 'body']Body Block[/block]`
+		const output = textSynth.merge(input, payload)
+		expect(output).toBe('Body Block')
 	})
 	
 })
