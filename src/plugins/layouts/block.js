@@ -34,11 +34,10 @@ export default {
 			output: 'The output depends on how the block is later used in the layout.',
 			note: 'This block named "header" can be filled later in a layout.'
 		}
-	]
-
-	// PROCESSING LOGIC IS COVERED IN THE LAYOUT PLUGIN.
-
-	// The basic block tag does not need to do any processing on its own,
-	// it's more about how it's used in a layout plugin.
+	],
+	
+	processor(request) {
+		return request.content
+	}
 
 }
