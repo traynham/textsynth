@@ -6,6 +6,7 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 import * as entities from 'entities'
+import Matter from 'gray-matter';
 import walk from 'walk-sync'
 
 
@@ -89,7 +90,8 @@ class TextMerger {
 	alias = (tag, alias) => {
 		if(!Array.isArray(alias)) { alias = [alias] }
 		alias.forEach( alias => {
-			this.tags[alias] = this.plugins[tag]
+			//this.tags[alias] = this.plugins[tag]
+			this.tags[alias] = {...this.plugins[tag], alias: alias}
 		})
 	}
 
@@ -101,37 +103,70 @@ class TextMerger {
 	 */
 	merge(template, payload) {
 		
+		let {start, end} = this.delimiters.raw
+		
 		payload ??= { _synth: {} };
 		payload._synth ??= {};
 		payload._synth.views ??= this.views;
+		
+		let matter = Matter(template)
+		
+		template = matter.content
+		payload.page = matter.data
 		
 		if('flush_comments' in payload._synth){
 			this.flush_comments = payload._synth.flush_comments
 		}
 		
-		// REMOVE COMMENTS
-		if(this.flush_comments){
-			
-			// Remove single-line comments
-			template = template.replace(/(?<!:)(\/\/[^\n]*)/g, '')
-			
-			// Remove multi-line C-style comments
-			template = template.replace(/\/\*[\s\S]*?\*\//g, '')
-			
-			// Remove multi-line HTML comments
-			template = template.replace(/<!--[\s\S]*?-->/g, '')
-			
+		//IF HAS LAYOUT
+		if(payload.page.layout || payload.layout){
+			template = `${start}layout: '${payload.page.layout}'${end}${template}${start}/layout${end}`
 		}
 		
+		// REMOVE COMMENTS
+		template = this.removeComments(template)
+		
 		// REMOVE LEADING TABS
-		if (this.removeTabs) {
-			template = template.replace(/^\t+/gm, '')
+		template = this.removeLeadingTabs(template)
+		
+		// IF MARKDOWN
+		if(payload._synth.md || payload.page.md){
+			template = `${start}md${end}${template}${start}/md${end}`
+		}
+		
+		// IF CACHE
+		if(payload.page.cache){
+			template = `${start}cache${end}${template}${start}/cache${end}`
 		}
 		
 		// PROCESS
 		return this.process(template, payload)
 		
 	}
+	
+	removeComments(text) {
+		
+		if(!this.flush_comments){ return text }
+		
+		// Remove single-line comments
+		text = text.replace(/(?<!:)(\/\/[^\n]*)/g, '')
+		
+		// Remove multi-line C-style comments
+		text = text.replace(/\/\*[\s\S]*?\*\//g, '')
+		
+		// Remove multi-line HTML comments
+		text = text.replace(/<!--[\s\S]*?-->/g, '')
+		
+		return text
+		
+	}
+	
+	removeLeadingTabs(text) {
+		if(!this.removeTabs){ return text }
+		return text.replace(/^\t+/gm, '')
+	}
+	
+	
 	
 	/**
 	 * Merge a file with a payload.
@@ -146,6 +181,13 @@ class TextMerger {
 		payload._synth.views ??= this.views;
 		
 		let thePath = path.join(payload._synth.views, filePath)
+		
+		let parsedPath = path.parse(thePath)
+		
+		// Declare as markdown if extension is .md.
+		if(parsedPath.ext === '.md'){
+			payload._synth.md = true
+		}
 		
 		// IF EXPRESS, FILEPATH IS ALREADY FULL PATH
 		if(payload._synth.isExpress){
