@@ -43,8 +43,6 @@ export default {
 		
 		let { cacheFolder, cacheDuration, cacheCleanup } = this.settings
 		
-		console.log('SETTINGS::', this.settings)
-		
 		// Create cache directory if it doesn't exist
 		if (!fs.existsSync(cacheFolder)) {
 			fs.mkdirSync(cacheFolder)
