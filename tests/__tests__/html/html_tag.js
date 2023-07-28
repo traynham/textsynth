@@ -20,4 +20,22 @@ describe('div plugin', () => {
 		expect(textSynth.merge(input, {})).toBe(expectedOutput)
 	})
 	
+	test('uses div tag by default', () => {
+		const input = '[html_tag: .myClass #myId]This is the div content[/html_tag]'
+		const expectedOutput = '<div class="myClass" id="myId">This is the div content</div>'
+		expect(textSynth.merge(input, {})).toBe(expectedOutput)
+	})
+	
+	test('p tag from alias', () => {
+		const input = '[p: .myClass #myId]This is the p content[/p]'
+		const expectedOutput = '<p class="myClass" id="myId">This is the p content</p>'
+		expect(textSynth.merge(input, {})).toBe(expectedOutput)
+	})
+	
+	test('div tag with no params.', () => {
+		const input = '[div]This is the div content[/div]'
+		const expectedOutput = '<div>This is the div content</div>'
+		expect(textSynth.merge(input, {})).toBe(expectedOutput)
+	})
+	
 })
