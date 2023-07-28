@@ -24,6 +24,11 @@ describe('mergeFile', () => {
 		expect(result.trim()).toBe('<h1>THIS IS REALLY COOL.</h1>')
 	})
 	
+	test("merge a markdown file", async () => {
+		let result = await textSynth.mergeFile('test.md', payload)
+		expect(result.trim()).toBe('<h1>Test Markdown File</h1>')
+	})
+	
 	test("merge a file, without payload", async () => {
 		let result = await textSynth.mergeFile('test.synth')
 		expect(result.trim()).toBe('<h1>THIS IS REALLY COOL.</h1>')
