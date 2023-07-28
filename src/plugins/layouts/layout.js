@@ -1,15 +1,9 @@
 import fs from 'fs'
 import path from 'path'
 
-/*
-	TODO:
-	* Throw error or check for valid path in layoutContent.
-	* Add a way to pass a layout as a string in addition to a file.
-*/
-
 export default {
 	
-	// Basic Information
+	// BASIC INFORMATION
 	name: 'layout',
 	author: 'Jesse Traynham',
 	category: 'Layout',
@@ -18,7 +12,7 @@ export default {
 	syntax: '[layout "templatePath"]\n\t[block_set "blockName"]Block content[/block_set]\n[/layout]',
 	version: '1.0.0',
 	
-	// Content and Params details
+	// CONTENT AND PARAMS DETAILS
 	content: [
 		{
 			name: 'content',
@@ -36,7 +30,7 @@ export default {
 		}
 	],
 	
-	// Examples for usage
+	// EXAMPLES FOR USAGE
 	examples: [
 		{
 			input:
@@ -50,77 +44,115 @@ export default {
 			note: 'Loads the "main.synth" layout and sets the "title" and "body" blocks.'
 		}
 	],
-
-	processor(request) {
+	
+	processor(req) {
 		
-		this.start = request.textMerger.delimiters.enc.start
-		this.end = request.textMerger.delimiters.enc.end
+		// DESTRUCTURE THE REQUEST OBJECT
+		let { content, params, payload, textMerger } = req
 		
-		const layoutPath = path.join(request.payload._synth.views, request.params[0])
+		// LOAD THE LAYOUT CONTENT
+		let layoutContent = this.loadLayout(payload, params)
 		
-		// Check if file exists before reading it
+		// CREATE A STACK TO HANDLE NESTED LAYOUT RENDERING
+		// INITIALIZE IT IF IT DOESN'T EXIST YET
+		textMerger.layoutStack = textMerger.layoutStack || []
+		
+		// PUSH AN EMPTY OBJECT INTO THE STACK TO HANDLE THE CURRENT LAYOUT
+		textMerger.layoutStack.push({})
+		
+		// REMOVE COMMENTS FROM THE LAYOUT CONTENT
+		layoutContent = textMerger.removeComments(layoutContent)
+		
+		// REMOVE LEADING TABS FROM THE LAYOUT CONTENT
+		layoutContent = textMerger.removeLeadingTabs(layoutContent)
+		
+		// POPULATE THE BLOCKS OBJECT WITH THE INITIAL BLOCK CONTENT FROM THE LAYOUT
+		this.populateLayoutBlocksObj(textMerger, params, layoutContent) 
+		
+		// RENDER THE LAYOUT WITH THE BLOCK CONTENT AND RETURN THE RESULT
+		let renderedLayout = this.renderLayout(textMerger, content, layoutContent, params, payload)
+		
+		// ONCE THE LAYOUT IS RENDERED, POP THE STACK TO CLEAN UP
+		textMerger.layoutStack.pop()
+		
+		// RETURN THE RENDERED LAYOUT
+		return renderedLayout
+		
+	},
+	
+	loadLayout(payload, params) {
+		
+		// IF THE PAYLOAD CONTAINS THE LAYOUT, JUST RETURN IT
+		if(payload.layout){ return payload.layout }
+		
+		// CONSTRUCT THE FULL PATH TO THE LAYOUT FILE
+		const layoutPath = path.join(payload._synth.views, params[0])
+		
+		// CHECK IF THE LAYOUT FILE EXISTS BEFORE READING IT
 		if (!fs.existsSync(layoutPath)) {
 			return `ERROR: Layout file does not exist: ${layoutPath}`
 		}
 		
-		const layoutContent = fs.readFileSync(layoutPath, 'utf-8')
-		const childContent = request.content
-		
-		const blockContent = {}
-		
-		// Prepopulate blockContent with block content from layoutContent
-		this.processTag(layoutContent, 'block', (tagName, blockName, content) => {
-			blockContent[blockName] = content
-		})
-		
-		// Process block_set, block_prepend and block_append in order of appearance in childContent
-		this.processTag(childContent, ['block_set', 'block_prepend', 'block_append'], (tagName, blockName, content) => {
-			
-			switch(tagName) {
-				case 'block_set':
-					blockContent[blockName] = content
-					break
-				case 'block_prepend':
-					blockContent[blockName] = content + blockContent[blockName]
-					break
-				case 'block_append':
-					blockContent[blockName] = blockContent[blockName] + content
-					break
-			}
-		});
-		
-		//Replace block placeholders with block content
-		const finalContent = this.processTag(layoutContent, 'block', (tagName, blockName) => {
-			return blockContent[blockName]
-		}, true)
-		
-		return finalContent
+		// READ AND RETURN THE CONTENT OF THE LAYOUT FILE
+		return fs.readFileSync(layoutPath, 'utf-8')
 		
 	},
-
-	processTag(input, tagNames, callback, returnReplaced = false) {
+	
+	populateLayoutBlocksObj(textMerger, params, layoutContent) {
 		
-		if(!Array.isArray(tagNames)) {
-			tagNames = [tagNames]
+		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
+		let {start, end} = textMerger.delimiters.enc
+		
+		// USE THE TOP OBJECT IN THE LAYOUT STACK
+		let blocks = textMerger.layoutStack[textMerger.layoutStack.length - 1]
+		
+		// FIND INITIAL BLOCK CONTENT IN THE LAYOUT AND POPULATE THE BLOCKS OBJECT
+		let initialBlockContentMatches
+		const initialBlockContentRegex = new RegExp(`${start}block:?\\s+["']([^"']+)["']\\]([\\s\\S]*?)${start}\\/block${end}`, 'gm')
+		
+		// ITERATE OVER ALL MATCHES IN THE LAYOUT CONTENT
+		while ((initialBlockContentMatches = initialBlockContentRegex.exec(layoutContent)) !== null) {
+			
+			// EXTRACT THE BLOCK NAME AND THE INITIAL CONTENT
+			const blockName = initialBlockContentMatches[1]
+			const initialContent = initialBlockContentMatches[2]
+			
+			// POPULATE THE BLOCKS OBJECT WITH THE INITIAL BLOCK CONTENT
+			blocks[blockName] = initialContent
+			
 		}
-		// updated regex
-		const regex = new RegExp(
-			`${this.start}(${tagNames.join('|')})\\s+["']([^"']+)["']\\]([\\s\\S]*?)${this.start}\\/\\1${this.end}`, 
-			'gm'
-		)
 		
-		let match
-		let result = input
+	},
+	
+	renderLayout(textMerger, content, layoutContent, params, payload) {
+		console.log('PAYLOAD??', payload)
+		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
+		let {start, end} = textMerger.delimiters.enc
 		
-		while ((match = regex.exec(input)) !== null) {
-			const [fullMatch, tagName, blockName, content] = match
-			const processedContent = callback(tagName, blockName, content)
-			if (returnReplaced) {
-				result = result.replace(fullMatch, processedContent)
-			}
+		// PROCESS THE CONTENT OF THE LAYOUT
+		let rendered = textMerger.process(content, payload)
+		
+		// USE THE TOP OBJECT IN THE LAYOUT STACK
+		let blocks = textMerger.layoutStack[textMerger.layoutStack.length - 1]
+		
+		// IF THE PAYLOAD HAS A 'PAGE.BLOCK' PROPERTY, USE THE BLOCK FOR THE RENDERED CONTENT
+		if(payload.page.block){
+			blocks[payload.page.block] = rendered
 		}
 		
-		return result
+		// ITERATE OVER ALL ENTRIES IN THE BLOCKS OBJECT
+		for (const [blockName, blockContent] of Object.entries(blocks)) {
+			
+			// CREATE A REGEX TO MATCH THE CURRENT BLOCK PLACEHOLDER
+			const regex = new RegExp(`${start}block:?\\s+["']${blockName}["']\\]([\\s\\S]*?)${start}\\/block${end}`, 'gm')
+			
+			// REPLACE THE BLOCK PLACEHOLDER WITH THE BLOCK CONTENT
+			layoutContent = layoutContent.replace(regex, blockContent)
+			
+		}
+		
+		// RETURN THE FINAL LAYOUT CONTENT WITH ALL BLOCK PLACEHOLDERS REPLACED
+		return layoutContent
 		
 	}
 
