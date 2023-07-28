@@ -34,12 +34,23 @@ export default {
 			output: 'The output depends on the initial content of the block in the layout.',
 			note: 'This example sets the content of a block named "header".'
 		}
-	]
+	],
 	
-	// PROCESSING LOGIC IS COVERED IN THE LAYOUT PLUGIN.
-
-	// The block_set tag doesn't need to do any processing on its own,
-	// it's about how it's used in a layout plugin.
-	// The actual setting operation is handled by the layout plugin.
+	processor({ content, params, payload, textMerger}) {
+		
+		// EXTRACT THE BLOCK NAME FROM THE PARAMETERS PASSED IN
+		const blockName = params[0]
+		
+		// ACCESS THE MOST RECENT LAYOUT FROM THE STACK IN TEXTMERGER
+		let currentLayout = textMerger.layoutStack[textMerger.layoutStack.length - 1]
+		
+		// ASSIGN THE PROCESSED CONTENT TO THE BLOCK WITH THE SPECIFIED NAME IN THE CURRENT LAYOUT.
+		// IF THE BLOCK DOES NOT EXIST, IT WILL CREATE A NEW ONE WITH THE PROCESSED CONTENT.
+		currentLayout[blockName] = textMerger.process(content, payload)
+		
+		// AS THIS IS A BLOCK_SET PROCESSOR, IT DOESN'T NEED TO RETURN ANY CONTENT 
+		// FOR THE CURRENT PROCESSING STAGE, SO IT RETURNS AN EMPTY STRING.
+		return ''
+	}
 
 }
