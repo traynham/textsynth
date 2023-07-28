@@ -62,6 +62,27 @@ describe("merge", () => {
 		expect(result).toBe('THIS is a  TAG.')
 	})
 	
+	test("set as markdown", () => {
+		let payload = { _synth: { md: true}}
+		const template = '# My Great Title.'
+		let result = textSynth.merge(template, payload).trim()
+		expect(result).toBe('<h1>My Great Title.</h1>')
+	})
+	
+	test("don't remove tabs", async () => {
+		let textSynth = await TextSynth({removeTabs: false})
+		const template = '	Template with a tab.'
+		let result = textSynth.merge(template, payload)
+		expect(result).toBe('	Template with a tab.')
+	})
+	
+	test("set to use cache", () => {
+		let payload = { _synth: { md: true}}
+		const template = '---\ncache: true\n---\n# My Great Title.'
+		let result = textSynth.merge(template, payload).trim()
+		expect(result).toBe('<h1>My Great Title.</h1>')
+	})
+	
 	test("throw error in a tag", () => {
 		
 		textSynth.use({
