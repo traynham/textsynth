@@ -125,7 +125,7 @@ export default {
 	},
 	
 	renderLayout(textMerger, content, layoutContent, params, payload) {
-		console.log('PAYLOAD??', payload)
+		
 		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
 		let {start, end} = textMerger.delimiters.enc
 		
