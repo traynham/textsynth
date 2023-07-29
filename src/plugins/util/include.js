@@ -24,41 +24,32 @@ export default {
 	
 	processor(req) {
 		
-		// If no content is provided, throw an error
+		// Check if content (the file to be included) is provided. If not, return an error message.
 		if (req.content.length === 0) {
-			console.log('No file specified for include tag')
-			return ''
+			return 'ERROR: No file specified for include tag'
 		}
 		
-		// Add ".synth" extension to the file if it doesn't have any extension
-		if(path.extname(req.content) === ''){
-			req.content = req.content + '.synth'
+		// Check if the included file has an extension. If not, return an error message.
+		if(!path.extname(req.content)){
+			return 'ERROR: Include file name requires an extension.'
 		}
 		
-		// Check if the file has the correct ".synth" extension, and throw an error if it doesn't
-		if(path.extname(req.content) !== '.synth'){
-			console.log(`Include file has wrong extension: ${path.extname(req.content)}`)
-			return ''
+		// Generate the absolute path of the file to be included.
+		let includePath = path.join(req.payload._synth.views, req.content)
+		
+		// Check if the file to be included exists. If not, return an error message.
+		if (!fs.existsSync(includePath)) {
+			return `ERROR: Include file does not exist: ${includePath}`
 		}
 		
-		let thePath = path.join(req.payload._synth.views, req.content)
+		// If the file exists, read its content.
+		const fileContent = fs.readFileSync(includePath, {encoding:'utf8'})
 		
-		// Check if the file is outside of the views folder for Express requests, and throw an error if it is
-			
-		/*
-		if(!thePath.startsWith(req.payload.settings.views)){
-			throw new Error(
-				`Include file is outside of views folder: ${req.content} requested from ${req.payload.settings.template}`
-			)
-		}
-		*/
-		
-		// Read the content of the file
-		const fileContent = fs.readFileSync(thePath, {encoding:'utf8'})
-		
-		// Merge the included file content with the payload
+		// Process the included file content using the textMerger, passing in the file's content and the payload.
+		// This allows nested includes and processing of other tags within the included file.
 		const mergedContent = req.textMerger.process(fileContent, req.payload)
 		
+		// Return the processed content of the included file.
 		return mergedContent
 		
 	}
