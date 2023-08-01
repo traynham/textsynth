@@ -693,47 +693,69 @@ class TextMerger {
 	 * @param {string} args - A string of arguments to parse.
 	 * @returns {Object} An object with keys: attributes, classes, id, otherValues. Each key is associated with an array or a string of extracted values.
 	 */
+
 	_gather_cargo(args, payload) {
 		
 		if(!args) return
-		
-		// Split the arguments string into an array of arguments. 
-		// Matches the attribute pattern (key="value" or key='value'), space-separated values, or comma-separated values.
-		let chunks = args.match(/(["']?\w+["']?\s*=\s*(?:["'][^"']*["']|\S+)|"[^"]+"|'[^']+'|[^, ]+)/g) // || []
 		
 		// Initializing the cargo object that will store the parsed values
 		let cargo = {
 			attributes: {},
 			classes: [],
 			id: '',
-			values: []
+			values: [],
+			using: null
 		}
 		
-		// Looping through each argument chunk
-		chunks.forEach(arg => {
-			
-			arg = arg.trim()
-			
-			// Attempt to match attribute pattern (key="value" or key='value')
-			const attrMatch = arg.match(/^["']?(\w+)["']? *= *["']?([^"']+)["']?$/);
-			
-			if (attrMatch) {
-				// If the attribute pattern is matched, remove the quotes and trim the spaces of the attribute value
-				const [, key, value] = attrMatch
-				cargo.attributes[key] = value.trim()
-			} else if (arg.startsWith('.')) {
-				// If the argument starts with a dot, it's a class. Remove the dot and add it to the classes array.
-				cargo.classes.push(arg.slice(1))
-			} else if (arg.startsWith('#')) {
-				// If the argument starts with a hash, it's an ID. Remove the hash and assign the ID.
-				cargo.id = arg.slice(1)
-			} else {
-				// If the argument does not match any of the above conditions, it's considered an "other value". Remove any surrounding quotes and add it to the otherValues array.
-				cargo.values.push(arg.trim()) //.replace(/^['"]|['"]$/g, ''))
-			}
-			
-		})
+		// Pattern for "using"
+		let usingMatch = args.match(/(\w+)\s+using\s+([\w.]+)/g)
 		
+		if (usingMatch) {
+			let [name, value] = usingMatch[0].split(/\s+using\s+/)
+			cargo.using = {name, value: this._getValueFromPath(value, payload)}
+			cargo.values.push(value)
+			args = args.replace(usingMatch[0], '')
+		}
+		
+		// Pattern for attributes
+		let attrMatch = args.match(/["']?([\w-]+)["']? *= *["']?([^"']+)["']?/g);
+
+		if(attrMatch){
+			attrMatch.forEach(attr => {
+				let [key, value] = attr.split('=')
+				key = key.trim().replace(/^['"]|['"]$/g, '')
+				value = value?.trim().replace(/^['"]|['"]$/g, '')
+				cargo.attributes[key] = value
+				args = args.replace(attr, '') // remove the matched attribute
+			})
+		}
+		
+		// Pattern for classes
+		let classMatch = args.match(/(?:^|\s)(\.\w+)/g)
+		
+		if(classMatch){
+			classMatch.forEach(cls => {
+				cargo.classes.push(cls.trim().slice(1))
+				args = args.replace(cls, '') // remove the matched class
+			})
+		}
+		
+		// Pattern for id
+		let idMatch = args.match(/#\w+/g)
+		
+		if(idMatch && idMatch[0]){
+			cargo.id = idMatch[0].slice(1)
+			args = args.replace(idMatch[0], '') // remove the matched id
+		}
+		
+		// Pattern for other values
+		let otherValuesMatch = args.trim().match(/(".*?"|'.*?'|[^, ]+)/g)
+		if(otherValuesMatch){
+			otherValuesMatch.forEach(val => {
+				let value = val.trim()
+				cargo.values.push(value)
+			})
+		}
 		
 		cargo.params = cargo.values.map(param => {
 			return this._getValueFromPath(param, payload)
