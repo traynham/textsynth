@@ -26,6 +26,12 @@ describe('each plugin', () => {
 		const expectedOutput = `- Cycling- Photography- Reading`
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
+	
+	test('Iterates over an array using custom variable name', () => {
+		const input = `[each: hobby using user.hobbies]- [hobby][/each]`
+		const expectedOutput = `- Cycling- Photography- Reading`
+		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
+	})
 
 	test('Iterates over an object', () => {
 		const input = `[each: user.details][key]: [value]\n[/each]`
