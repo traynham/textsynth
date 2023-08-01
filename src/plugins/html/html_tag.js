@@ -58,10 +58,7 @@ export default {
 		// VALUES - DEAL WITH QUOTES AND SPACES.
 		if(req.cargo?.values){ 
 			req.cargo.values = req.cargo.values.map(value => {
-				if(value.includes(' ')){
-					console.log(`"${value}" has a space!!`)
-					return value
-				}
+				if(value.includes(' ')){ return value }
 				return value.replace(/['"]/g, '')
 			})
 		}
