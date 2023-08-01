@@ -22,12 +22,17 @@ describe('choose plugin', () => {
 	})
 	
 	test('returns second content when condition is false quoted string', () => {
-		const input = `[choose('false'): "Hello Admin!", "Hello User!", "Hello"]`
+		const input = `[choose('false') "Hello Admin!", "Hello User!", "Hello"]`
 		expect(textSynth.merge(input, payload)).toBe('Hello User!')
 	})
 	
 	test('returns first content when condition is true string', () => {
 		const input = `[choose(true) "Hello Admin!", "Hello User!", "Hello"]`
+		expect(textSynth.merge(input, payload)).toBe('Hello Admin!')
+	})
+	
+	test('returns first content when condition is true string, using space delimiters', () => {
+		const input = `[choose(true) "Hello Admin!" "Hello User!" "Hello"]`
 		expect(textSynth.merge(input, payload)).toBe('Hello Admin!')
 	})
 	
