@@ -56,7 +56,12 @@ export default {
 		
 		let payload = {...req.payload}
 		
-		const iterable = req.params[0]
+		let iterable = req.params[0]
+		let name = ''
+		
+		if(req.cargo.using){
+			name = req.cargo.using.name
+		}
 		
 		let output = ''
 		
@@ -65,27 +70,29 @@ export default {
 			iterable.forEach((item) => {
 				
 				payload.value = item
+				payload[name] = item
 				
 				output += req.textMerger.process(req.content, payload)
 				
 			})
 			
 		} else if (typeof iterable === 'object') {
+			
+			Object.entries(iterable).forEach(([key, value]) => {
+				
+				payload.name = key
+				payload.key = key
+				payload.value = value				
+				payload[name] = {key, value}
+				
+				output += req.textMerger.process(req.content, payload)
+				
+			})
+			
+		}
 		
-		Object.entries(iterable).forEach(([key, value]) => {
-			
-			payload.name = key
-			payload.key = key
-			payload.value = value
-			
-			output += req.textMerger.process(req.content, payload)
-			
-		})
-		
-	}
-	
 	return output
-	
+		
 	}
   
 }
