@@ -55,15 +55,25 @@ export default {
 		// ID
 		if(req.cargo?.id){ attr.id = req.cargo?.id }
 		
+		// VALUES - DEAL WITH QUOTES AND SPACES.
+		if(req.cargo?.values){ 
+			req.cargo.values = req.cargo.values.map(value => {
+				if(value.includes(' ')){
+					console.log(`"${value}" has a space!!`)
+					return value
+				}
+				return value.replace(/['"]/g, '')
+			})
+		}
+		
 		const attributeString = [
 			'',
 			...Object.entries(attr).map(([key, value]) => `${key}="${value}"`),
 			...req.cargo?.values || []
 		].join(' ')
 		
-		let out = `<${tag}${attributeString}>${req.content}</${tag}>`
-		
-		return out
+		return `<${tag}${attributeString}>${req.content}</${tag}>`
 		
 	}
+
 }
