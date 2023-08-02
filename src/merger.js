@@ -26,11 +26,6 @@ class TextMerger {
 		enc: {}		              // REGEX ESCAPED START/END DELIMITERS
 	}
 	
-	opener_raw                     // OPEN TAG DELIMITER
-	closer_raw                     // CLOSE TAG DELIMITER
-	opener_enc                     // OPEN TAG DELIMITER ENCODED
-	closer_enc                     // CLOSE TAG DELIMITER ENCODED
-	
 	// SETTINGS
 	custom_plugins    = 'plugins'  // CUSTOM PLUGINS DIR FROM APP ROOT
 	flush_comments    = true       // REMOVE COMMENTS BEFORE PROCESSING
@@ -302,6 +297,11 @@ class TextMerger {
 		let start = opt.opener || '['
 		let end = opt.closer || ']'
 		
+		if(opt.delimiters && opt.delimiters[0] != '<' && opt.delimiters[1] != '>' ){
+			start = opt.delimiters[0]
+			end = opt.delimiters[1]
+		}
+		
 		this.delimiters = {
 			raw: {
 				start: start,
@@ -316,12 +316,6 @@ class TextMerger {
 				end:   end.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
 			}
 		}
-		
-		// TODO: PHASE OUT IN FAVOR OF THIS.DELIMITERS
-		this.opener_raw = this.delimiters.raw.start
-		this.closer_raw = this.delimiters.raw.end
-		this.opener_enc = this.delimiters.enc.start
-		this.closer_enc = this.delimiters.enc.end
 		
 	}
 	
@@ -417,10 +411,9 @@ class TextMerger {
 	
 	_processSingles(input, payload) {
 		
-		
 		// Match unescaped TextSynth tags, ignoring surrounding whitespaces within the tags.
 		const mergeTagRegex = new RegExp(
-			`(?<!\\\\)${this.opener_enc}\\s*(.*?)\\s*(?<!\\\\)${this.closer_enc}`,
+			`(?<!\\\\)${this.delimiters.enc.start}\\s*(.*?)\\s*(?<!\\\\)${this.delimiters.enc.end}`,
 			'g'
 		)
 		
@@ -458,7 +451,10 @@ class TextMerger {
 			return cargo
 			
 		})
-		.replace(new RegExp(`\\\\(${this.opener_enc}|${this.closer_enc})`, 'g'), '$1'); // Removes preceding escape characters for [ and ]
+		.replace(
+			new RegExp(`\\\\(${this.delimiters.enc.start}|${this.delimiters.enc.end})`, 'g'), 
+			'$1'
+		) // Removes preceding escape characters for delimiters
 		
 	}
 
@@ -486,7 +482,7 @@ class TextMerger {
 			foundContainer = false
 			
 			const mergeTagRegex = new RegExp(
-				`${this.opener_enc}\\s*(.*?)\\s*${this.closer_enc}(\\n)?`, 
+				`${this.delimiters.enc.start}\\s*(.*?)\\s*${this.delimiters.enc.end}(\\n)?`, 
 				'gs'
 			)
 			
@@ -502,7 +498,7 @@ class TextMerger {
 				}
 				
 				foundContainer = true;
-				const closingTag = `${this.opener_raw}/${processors[0].name}${this.closer_raw}`;
+				const closingTag = `${this.delimiters.raw.start}/${processors[0].name}${this.delimiters.raw.end}`;
 				const closingIndex = this._findClosingTagIndex(output, match.index, processors[0].name)
 				
 				if (closingIndex === -1) {
@@ -575,17 +571,18 @@ class TextMerger {
 	 */
 	_findClosingTagIndex(input, startIndex, tagName) {
 		
-		const openingTagPattern = new RegExp(`${this.opener_enc}${tagName}`, 'g')
-		
-		const closingTagPattern = new RegExp(`${this.opener_enc}\\/${tagName}${this.closer_enc}`, 'g')
+		const openingTagPattern = new RegExp(`${this.delimiters.enc.start}${tagName}`, 'g')
+		const closingTagPattern = new RegExp(`${this.delimiters.enc.start}\\/${tagName}${this.delimiters.enc.end}`, 'g')
 		
 		let index = startIndex
 		let count = 1
 		
 		while (count > 0) {
 			
-			const openingIndex = this._findNextIndex(input, openingTagPattern, index + this.opener_raw.length + tagName.length)
-			const closingIndex = this._findNextIndex(input, closingTagPattern, index + this.opener_raw.length + tagName.length + 1) // +1 for the "/"
+			// THIS SHOULD TAKE INTO ACCOUNT THE END DELIM TOO.
+			
+			const openingIndex = this._findNextIndex(input, openingTagPattern, index + this.delimiters.raw.start.length + tagName.length)
+			const closingIndex = this._findNextIndex(input, closingTagPattern, index + this.delimiters.raw.start.length + tagName.length + 1) // +1 for the "/"
 			
 			if (closingIndex === -1) {
 				return -1
