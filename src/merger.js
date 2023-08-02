@@ -571,18 +571,27 @@ class TextMerger {
 	 */
 	_findClosingTagIndex(input, startIndex, tagName) {
 		
-		const openingTagPattern = new RegExp(`${this.delimiters.enc.start}${tagName}`, 'g')
-		const closingTagPattern = new RegExp(`${this.delimiters.enc.start}\\/${tagName}${this.delimiters.enc.end}`, 'g')
+		let { enc, raw } = this.delimiters
+		
+		const openingTagPattern = new RegExp(`${enc.start}${tagName}`, 'g')
+		const closingTagPattern = new RegExp(`${enc.start}\\/${tagName}${enc.end}`, 'g')
 		
 		let index = startIndex
 		let count = 1
 		
 		while (count > 0) {
 			
-			// THIS SHOULD TAKE INTO ACCOUNT THE END DELIM TOO.
+			const openingIndex = this._findNextIndex(
+				input,
+				openingTagPattern,
+				index + raw.start.length + tagName.length
+			)
 			
-			const openingIndex = this._findNextIndex(input, openingTagPattern, index + this.delimiters.raw.start.length + tagName.length)
-			const closingIndex = this._findNextIndex(input, closingTagPattern, index + this.delimiters.raw.start.length + tagName.length + 1) // +1 for the "/"
+			const closingIndex = this._findNextIndex(
+				input, 
+				closingTagPattern, 
+				index + raw.start.length + tagName.length + 1 + (raw.end.length - raw.start.length)
+			)
 			
 			if (closingIndex === -1) {
 				return -1
