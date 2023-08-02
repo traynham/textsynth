@@ -11,7 +11,7 @@ const expected = '<div data-general="Things" class="class" id="myID">Time Travel
 const delimiters = [
 	['[', ']'],
 	['[-', ']'],
-	['[-', '--]'], // BREAKS
+	['[-', '--]'],
 	['[%', '%]'],
 	['{', '}'],
 	['_', '_'],
