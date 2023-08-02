@@ -731,17 +731,28 @@ class TextMerger {
 		}
 		
 		// Pattern for classes
-		let classMatch = args.match(/(?:^|\s)(\.\w+)/g)
+		let classMatch = args.match(/(?:^|\s)(\.[\w-]+)/g)
 		
 		if(classMatch){
-			classMatch.forEach(cls => {
-				cargo.classes.push(cls.trim().slice(1))
-				args = args.replace(cls, '') // remove the matched class
+			
+			let attr = cargo.attributes?.class?.split(/ +/g) || []
+			classMatch.push(...attr)
+			
+			classMatch.forEach(item => {
+				
+				args = args.replace(item, '') // remove the matched class
+				
+				let cls = item.trim().replace('.', '')
+				if(!cargo.classes.includes(cls)){
+					cargo.classes.push(cls)
+				}
+				
 			})
+			
 		}
 		
 		// Pattern for id
-		let idMatch = args.match(/#\w+/g)
+		let idMatch = args.match(/#[\w-]+/g)
 		
 		if(idMatch && idMatch[0]){
 			cargo.id = idMatch[0].slice(1)
