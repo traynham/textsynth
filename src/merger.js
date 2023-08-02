@@ -20,6 +20,7 @@ class TextMerger {
 	tags = {}                     // ALL TAGS INCLUDING ALIASES
 	
 	// DELIMITERS
+	delimiters_default = ['[', ']']
 	delimiters = {
 		raw: {},                  // RAW START/END DELIMITERS
 		esc: {},		          // HTML ESCAPED START/END DELIMITERS
@@ -40,7 +41,8 @@ class TextMerger {
 	 */
 	constructor(options = {}) {
 		
-		this.setDelimiters(options)
+		//this.setDelimiters(options)
+		this.setDelimiters(options.delimiters)
 		this.removeTabs = options.removeTabs !== false
 		
 		if(options.plugins){
@@ -292,15 +294,13 @@ class TextMerger {
 	 * Set delimiters for tags.
 	 * @param {Object} options - Options for setting delimiters.
 	 */
-	setDelimiters(opt){
+	setDelimiters(delimiters = this.delimiters_default){
 		
-		let start = opt.opener || '['
-		let end = opt.closer || ']'
-		
-		if(opt.delimiters && opt.delimiters[0] != '<' && opt.delimiters[1] != '>' ){
-			start = opt.delimiters[0]
-			end = opt.delimiters[1]
+		if(delimiters[0] === '<' || delimiters[1] === '>' ){
+			delimiters = this.delimiters_default
 		}
+		
+		let [ start, end ] = delimiters
 		
 		this.delimiters = {
 			raw: {
