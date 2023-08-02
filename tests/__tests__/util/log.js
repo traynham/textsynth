@@ -2,7 +2,6 @@ import { expect, describe, test, jest } from '@jest/globals';
 import TextSynth from '../index.js';
 
 const textSynth = await TextSynth()
-textSynth.setDelimiters({ opener: '{{', closer: '}}' })
 
 // Turning off console.
 console.log = () => {}
@@ -13,7 +12,7 @@ describe('log plugin', () => {
 		
 		const logMock = jest.spyOn(console, 'log')
 		
-		const input = '{{log: "Hello, World!"}}'
+		const input = '[log: "Hello, World!"]'
 		textSynth.merge(input);
 		
 		expect(logMock).toHaveBeenCalledWith('Hello, World!')
@@ -27,7 +26,7 @@ describe('log plugin', () => {
 		const logMock = jest.spyOn(console, 'log')
 		
 		const payload = { property: { path: { key: "value" } } }
-		const input = '{{log: property.path}}'
+		const input = '[log: property.path]'
 		textSynth.merge(input, payload)
 		
 		expect(logMock).toHaveBeenCalledWith({ key: "value" })
