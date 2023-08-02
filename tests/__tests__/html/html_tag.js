@@ -20,6 +20,30 @@ describe('div plugin', () => {
 		expect(textSynth.merge(input, {})).toBe(expectedOutput)
 	})
 	
+	test('generates div tag with id shorthand using underscores and dashes', () => {
+		const input = '[div: #my-Id_12345]This is the div content[/div]'
+		const expectedOutput = '<div id="my-Id_12345">This is the div content</div>'
+		expect(textSynth.merge(input, {})).toBe(expectedOutput)
+	})
+	
+	test('generates div tag with classes shorthand and class attribute', () => {
+		const input = '[div: .myClass class="anotherClass bordered"]This is the div content[/div]'
+		const expectedOutput = '<div class="myClass anotherClass bordered">This is the div content</div>'
+		expect(textSynth.merge(input, {})).toBe(expectedOutput)
+	})
+	
+	test('generates div tag with classes shorthand using underscores and dashes', () => {
+		const input = '[div: .my-Class .another_class]This is the div content[/div]'
+		const expectedOutput = '<div class="my-Class another_class">This is the div content</div>'
+		expect(textSynth.merge(input, {})).toBe(expectedOutput)
+	})
+	
+	test('generates div tag with classes shorthand and class attribute with unique results', () => {
+		const input = '[div: .myClass class="anotherClass bordered myClass" .aDifferentClass]This is the div content[/div]'
+		const expectedOutput = '<div class="myClass aDifferentClass anotherClass bordered">This is the div content</div>'
+		expect(textSynth.merge(input, {})).toBe(expectedOutput)
+	})
+	
 	test('generates div tag with quoted values', () => {
 		const input = `[div: 'required' selected "Some bad value"]This is the div content[/div]`
 		const expectedOutput = '<div required selected "Some bad value">This is the div content</div>'
