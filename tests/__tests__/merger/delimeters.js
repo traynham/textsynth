@@ -37,5 +37,12 @@ describe('capitalize plugin', () => {
 		})
 		
 	})
+	
+	
+	test(`test < and > delimiters which should revert to default delimiters.`, async () => {
+		const textSynth = await TextSynth({ delimiters: ['<', '>'] })
+		const input = `[div .class #myID data-general="Things"]${payload.string}[/div]`
+		expect(textSynth.merge(input, payload)).toBe(expected)
+	})
 
 })
