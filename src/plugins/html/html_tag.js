@@ -4,7 +4,41 @@ export default {
 	name: 'html_tag',
 	author: 'Jesse Traynham',
 	category: 'HTML',
-	aliases: ['a', 'div', 'p', 'ul', 'li'],
+	aliases: [
+		
+		'html', 'head', 'title', 'body',
+		
+		// HEADINGS
+		'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+		
+		// MULTIMEDIA
+		'a', 
+		
+		// HTML5 TAGS
+		//'article', 'footer', 'header', 'hgroup', 'nav', 'section',
+		
+		// FIGURE
+		'figure', 'figcaption',
+		
+		// FORM
+		'form', 'button', 'fieldset', 'legend', 'label', 'textarea', 'optgroup', 'option', 'optgroup', 'select',
+		
+		// CONTAINERS
+		'code', 'div', 'p', 'span', 'code',
+		
+		// TEXT FORMATTING
+		'pre', 'blockquote', 'small', 'strong',
+		
+		// FRAMES
+		'frameset', 'noframes',
+		
+		// LISTS
+		'ul', 'li',	'ol', 'dl', 'dt', 'dd',
+		
+		// TABLE
+		'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td',
+		
+	],
 	description: 'Generates a div tag with optional attributes, classes and id. All the additional arguments will be treated as HTML attributes and added to the div tag.',
 	kind: 'container',
 	syntax: '[div: attribute="value" .class #id]content[/div]',
