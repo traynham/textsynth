@@ -3,7 +3,6 @@ import TextSynth from '../index.js'
 
 
 const textSynth = await TextSynth()
-textSynth.setDelimiters({ opener: '[', closer: ']' })
 
 const payload = {
   _synth: {
