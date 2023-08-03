@@ -419,8 +419,7 @@ class TextMerger {
 		
 		return input.replace(mergeTagRegex, (match, mergeTag) => {
 			
-			const parseMergeTag = this._parseMergeTag(mergeTag, payload)
-			let { processors, cargo } = parseMergeTag
+			let { processors, cargo } = this._parseMergeTag(mergeTag, payload)
 			
 			for (const { name, params } of processors) {
 				
@@ -434,6 +433,7 @@ class TextMerger {
 				}
 				
 				const request = {
+					cargo,
 					content: cargo?.params.length === 1 ? cargo?.params[0] : cargo,
 					params: params,
 					payload,
@@ -714,7 +714,7 @@ class TextMerger {
 		}
 		
 		// Pattern for "using"
-		let usingMatch = args.match(/(\w+)\s+using\s+([\w.]+)/g)
+		let usingMatch = args.match(/^.+\s+using\s+.+$/g) // FULL STRING MATCH.
 		
 		if (usingMatch) {
 			let [name, value] = usingMatch[0].split(/\s+using\s+/)
