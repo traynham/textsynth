@@ -6,7 +6,9 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 import * as entities from 'entities'
-import Matter from 'gray-matter';
+import Matter from 'gray-matter'
+import Lorry from 'lorry'
+import { createSyncFn } from 'synckit'
 import walk from 'walk-sync'
 
 
@@ -41,9 +43,9 @@ class TextMerger {
 	 */
 	constructor(options = {}) {
 		
-		//this.setDelimiters(options)
 		this.setDelimiters(options.delimiters)
 		this.removeTabs = options.removeTabs !== false
+		this.flush_comments = options.flush_comments !== false
 		
 		if(options.plugins){
 			this.custom_plugins = options.plugins
@@ -91,6 +93,61 @@ class TextMerger {
 			this.tags[alias] = {...this.plugins[tag], alias: alias}
 		})
 	}
+	
+	
+	fetchSyncJSON(uri) {
+		
+		let validate = this.validateURL(uri)
+		
+		if(validate.err){
+			return validate
+		}
+		
+		// MOVE TO CONSTRUCTER?
+		const __filename = fileURLToPath(import.meta.url) // PATH TO MERGER.JS
+		const __dirname = dirname(__filename)
+		const workerPath = join(__dirname, 'workers', 'worker_fetch_json.js')
+		
+		const syncFn = createSyncFn(workerPath)
+		const results = syncFn(uri)
+		
+		return results
+		
+	}
+	
+	
+	validateURL(uri){
+		
+		/*
+			TODO:
+			Return valid/cleaned up url from URL().href?
+		*/
+		
+		let location
+		let lorry = new Lorry()
+		
+		try {
+			location = new URL(uri)
+		} catch (e) {
+			return lorry.Throw(400, `ERROR: Invalid url › ${uri}`)
+		}
+		
+		//let forbidden_domains = ['localhost', '127.0.0.1', '[::1]']
+		let forbidden_domains = ['localhost', '[::1]']
+		let allowed_protocols = ['http:', 'https:']
+		
+		if(forbidden_domains.includes(location.hostname)){
+			return lorry.Throw(403, `ERROR: Forbidden domain › ${location.host}`)
+		}
+		
+		if(!allowed_protocols.includes(location.protocol)){
+			return lorry.Throw(403, `ERROR: Forbidden protocol › ${location.protocol}`)
+		}
+		
+		return lorry
+		
+	}
+	
 
 	/**
 	 * Merge a template with a payload.
@@ -102,14 +159,31 @@ class TextMerger {
 		
 		let {start, end} = this.delimiters.raw
 		
-		payload ??= { _synth: {} };
-		payload._synth ??= {};
-		payload._synth.views ??= this.views;
+		payload ??= { _synth: {} }
+		payload._synth ??= {}
+		payload._synth.views ??= this.views
 		
 		let matter = Matter(template)
 		
 		template = matter.content
 		payload.page = matter.data
+		
+		// IF HAS IMPORTJSON
+		if(payload.page.importJSON){
+			
+			const importArray = Array.isArray(payload.page.importJSON)
+			? payload.page.importJSON
+			: [payload.page.importJSON]
+			
+			importArray.forEach(item => {
+				if(item.includes(' using ')){
+					template = `${start}importJSON: ${item}${end}${template}`
+				} else {
+					template = `${start}importJSON: '${item}'${end}${template}`
+				}
+			})
+			
+		}
 		
 		if('flush_comments' in payload._synth){
 			this.flush_comments = payload._synth.flush_comments
@@ -270,6 +344,7 @@ class TextMerger {
 		if (this.tags[name]) {
 			
 			const req = {
+				cargo: args.cargo,
 				content: args.content,
 				params: args.params,
 				payload: args.payload,
@@ -277,7 +352,8 @@ class TextMerger {
 			}
 			
 			// Run the plugin
-			const result = this.plugins[name].processor(req)
+			//const result = this.plugins[name].processor(req)
+			const result = this.tags[name].processor(req)
 			
 			// Return the result
 			return result
@@ -408,7 +484,7 @@ class TextMerger {
 	 * If a plugin is associated with the tag, it processes the content using the plugin.
 	 * If the payload does not contain a value for the merge tag, it replaces the tag with an empty string.
 	 */
-	
+
 	_processSingles(input, payload) {
 		
 		// Match unescaped TextSynth tags, ignoring surrounding whitespaces within the tags.
@@ -417,46 +493,55 @@ class TextMerger {
 			'g'
 		)
 		
-		return input.replace(mergeTagRegex, (match, mergeTag) => {
-			
-			let { processors, cargo } = this._parseMergeTag(mergeTag, payload)
-			
-			for (const { name, params } of processors) {
-				
-				const plugin = this.tags[name]
-				
-				// UNDEFINED PLUGINS...
-				if (!plugin && this.showUndefinedTags) {
-					return match
-				} else if(!plugin &&!this.showUndefinedTags) {
-					return ''
-				}
-				
-				const request = {
-					cargo,
-					content: cargo?.params.length === 1 ? cargo?.params[0] : cargo,
-					params: params,
-					payload,
-					textMerger: this
-				}
-				
-				try {
-					cargo = plugin.processor(request)
-				} catch (e) {
-					console.log(`Error running "${name}" plugin: ${e}`)
-				}
-				
-			}
-			
-			return cargo
-			
+		// Process each match.
+		let processedInput = input.replace(mergeTagRegex, (match, mergeTag) => {
+			return this._processSingleTag(match, mergeTag, payload)
 		})
-		.replace(
+		
+		// Remove preceding escape characters for delimiters.
+		let finalInput = processedInput.replace(
 			new RegExp(`\\\\(${this.delimiters.enc.start}|${this.delimiters.enc.end})`, 'g'), 
 			'$1'
-		) // Removes preceding escape characters for delimiters
+		)
+		
+		return finalInput
 		
 	}
+	
+	_processSingleTag(match, mergeTag, payload) {
+		
+		let { processors, cargo } = this._parseMergeTag(mergeTag, payload)
+			
+		for (const { name, params } of processors) {
+			
+			const plugin = this.tags[name]
+			
+			// UNDEFINED PLUGINS...
+			if (!plugin && this.showUndefinedTags) {
+				return match
+			} else if(!plugin &&!this.showUndefinedTags) {
+				return ''
+			}
+			
+			const request = {
+				cargo,
+				content: cargo?.params.length === 1 ? cargo?.params[0] : cargo,
+				params: params,
+				payload,
+				textMerger: this
+			}
+			
+			try {
+				cargo = this.runPlugin(name, request)
+			} catch (e) {
+				console.log(`Error running "${name}" plugin: ${e}`)
+			}
+			
+		}
+		
+		return cargo
+	}
+
 
 	/**
 	 * Process "container" merge tags in a given input string.
@@ -848,11 +933,11 @@ async function expressTextSynthEngine(filePath, options, callback) {
 
 // CREATE A NEW TEXTMERGER AND INIT.
 async function createTextSynth(opt) {
-	const textMerger = new TextMerger(opt);
+	const textMerger = new TextMerger(opt)
 	await textMerger.init()
-	return textMerger;
+	return textMerger
 }
 
 
-export default createTextSynth; // textSynth
-export { createTextSynth, expressTextSynthEngine };
+export default createTextSynth // textSynth
+export { createTextSynth, expressTextSynthEngine }
