@@ -26,4 +26,10 @@ describe('TextMerger custom settings', () => {
 		expect(textSynth_delimiters.custom_plugins).toBe('/my_plugins')
 	})
 	
+	test('Throw validation on validateURL() method', async () => {
+		let synth = await TextSynth()
+		const result = await synth.validateURL('www.bogus.com')
+		expect(result.err.code).toBe(400)
+	})
+	
 })
