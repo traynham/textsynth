@@ -1,6 +1,9 @@
 import fs from 'fs'
 import path from 'path'
 
+import JSON6 from 'json-6'
+import Lorry from 'lorry'
+
 
 export default {
 	
@@ -31,39 +34,71 @@ export default {
 		
 		// Extract the name and path from the request cargo. If not specified, set defaults.
 		let name = req.cargo.using?.name || 'JSON'
-		let thePath = req.cargo.using?.value || req.content
+		let uri = req.cargo.using?.value || req.content
+		let views = path.resolve(req.payload._synth.views)
 		
-		// If thePath is not defined, return an error message.
-		if (!thePath) {
-			return 'ERROR: No file specified for importJSON tag'
+		if(!uri){
+			return `ERROR: No file specified for importJSON tag`
 		}
 		
-		// Check the extension of thePath. If it's not a JSON file, return an error.
-		if(path.extname(thePath) !== '.json'){
-			return `ERROR: JSON file requires .JSON extension.`
+		let parsedURL = this.createURL(uri, views)
+		
+		if(parsedURL.err){
+			return `ERROR: ${parsedURL.err.message} › ${uri}`
 		}
 		
-		// Construct the full path to the JSON file.
-		let includePath = path.join(req.payload._synth.views, thePath)
-		
-		// If the JSON file does not exist, return an error.
-		if (!fs.existsSync(includePath)) {
-			return `ERROR: JSON file does not exist: ${includePath}`
+		// IF FILE
+		if(parsedURL.protocol === 'file:'){
+			
+			let { pathname } = parsedURL
+			
+			let validExtension = ['.json', '.json5', '.json6'].includes(path.extname(pathname).toLowerCase())
+			
+			if(!validExtension){
+				return `ERROR: Invalid extension › '${path.extname(uri)}'`
+			}
+			
+			// If the JSON file does not exist, return an error.
+			if (!fs.existsSync(pathname)) {
+				return `ERROR: JSON file does not exist: ${pathname}`
+			}
+			
+			let fileContent = fs.readFileSync(pathname, {encoding:'utf8'})
+			
+			try {
+				req.payload[name] = JSON6.parse(fileContent)
+			} catch (error) {
+				return `ERROR: Failed to parse JSON: › ${error.message}`
+			}
+			
+			return ''
+			
 		}
 		
-		// Read the content of the JSON file.
-		const fileContent = fs.readFileSync(includePath, {encoding:'utf8'})
+		let fileContent = req.textMerger.fetchSyncJSON(parsedURL.href)
 		
-		// Try to parse the file content as JSON. If it fails, return an error.
-		try {
-			req.payload[name] = JSON.parse(fileContent)
-		} catch (error) {
-			return `ERROR: Failed to parse JSON: › ${error.message}`
+		if(fileContent.err){
+			return `${fileContent.err.message}`
 		}
 		
-		// If all steps are successful, return an empty string.
+		req.payload[name] = fileContent.value
+		
 		return ''
 		
+	},
+	
+	createURL(input, base){
+		
+		let lorry = new Lorry()
+		
+		input = decodeURIComponent(input).trim()
+		
+		try {
+			let obj = new URL(input, `file://${base}/`)
+			return obj
+		} catch (e) {
+			return lorry.Throw(400, e.message)
+		}
 	}
-  
+	
 }
