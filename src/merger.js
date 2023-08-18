@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url'
 
 import * as entities from 'entities'
 import Matter from 'gray-matter'
-import Lorry from 'lorry'
+import Lorry from '@jessetraynham/lorry'
 import { createSyncFn } from 'synckit'
 import walk from 'walk-sync'
 
