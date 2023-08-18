@@ -15,8 +15,8 @@
   "author": "Jesse Traynham",
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^8.43.0",
-    "jest": "^29.5.0",
+    "eslint": "^8.47.0",
+    "jest": "^29.6.2",
     "jsdoc-to-markdown": "^8.0.0"
   },
   "dependencies": {
