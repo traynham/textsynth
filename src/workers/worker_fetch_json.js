@@ -1,5 +1,5 @@
 import JSON6 from 'json-6'
-import Lorry from 'lorry'
+import Lorry from '@jessetraynham/lorry'
 import { runAsWorker } from 'synckit'
 
 
