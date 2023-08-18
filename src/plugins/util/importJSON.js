@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 
 import JSON6 from 'json-6'
-import Lorry from 'lorry'
+import Lorry from '@jessetraynham/lorry'
 
 
 export default {
