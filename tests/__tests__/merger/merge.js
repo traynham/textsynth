@@ -69,6 +69,13 @@ describe("merge", () => {
 		expect(result).toBe('<h1>My Great Title.</h1>')
 	})
 	
+	test("set markdown to false if page opt is false.", () => {
+		let payload = { _synth: { md: true}}
+		const template = '---\nmd: false\n---\n\n# My Great Title.'
+		let result = textSynth.merge(template, payload).trim()
+		expect(result).toBe('# My Great Title.')
+	})
+	
 	test("don't remove tabs", async () => {
 		let textSynth = await TextSynth({removeTabs: false})
 		const template = '	Template with a tab.'
