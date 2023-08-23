@@ -33,9 +33,9 @@ export default {
 	processor(req) {
 		
 		// Extract the name and path from the request cargo. If not specified, set defaults.
-		let name = req.cargo.using?.name || 'JSON'
-		let uri = req.cargo.using?.value || req.content
-		let views = path.resolve(req.payload._synth.views)
+		let name = req.cargo?.using?.name || 'JSON'
+		let uri = req.cargo?.using?.value || req.content
+		let views = path.resolve(req.payload?._synth.views)
 		
 		if(!uri){
 			return `ERROR: No file specified for importJSON tag`
