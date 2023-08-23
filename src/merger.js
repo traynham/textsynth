@@ -37,6 +37,9 @@ class TextMerger {
 	verbose           = false      // ALLOW VERBOSE CONSOLE LOG CHATER
 	views                          // VIEWS DIRECTORY
 	
+	// OTHER
+	global_payload    = {}         // DEFAULT PAYLOAD
+	
 	/**
 	 * Constructor for TextMerger class.
 	 * @param {Object} options - Optional settings for the merger.
@@ -157,6 +160,9 @@ class TextMerger {
 	 */
 	merge(template, payload) {
 		
+		// SET PAYLOAD TO GLOBAL PAYLOAD AND MERGE PAYLOAD.
+		payload = {...this.global_payload, ...payload}
+		
 		let {start, end} = this.delimiters.raw
 		
 		payload ??= { _synth: {} }
@@ -199,6 +205,11 @@ class TextMerger {
 		
 		// REMOVE LEADING TABS
 		template = this.removeLeadingTabs(template)
+		
+		// ALLOW PAGE.MD TO TRUMP _SYNTH.MD VALUE.
+		if(payload.page.md === false){
+			payload._synth.md = false
+		}
 		
 		// IF MARKDOWN
 		if(payload._synth.md || payload.page.md){
@@ -295,7 +306,7 @@ class TextMerger {
 		processed = this._processContainers(template, payload)
 		
 		// Process single merge tags
-		processed = this._processSingles(processed, payload)
+//		processed = this._processSingles(processed, payload)
 		
 		return processed
 		
@@ -383,11 +394,11 @@ class TextMerger {
 				start: start,
 				end:   end
 			},
-			esc: {
+			enc: {
 				start: entities.encodeHTML(start),
 				end:   entities.encodeHTML(end)
 			},
-			enc: {
+			esc: {
 				start: start.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'),
 				end:   end.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
 			}
@@ -484,12 +495,16 @@ class TextMerger {
 	 * If a plugin is associated with the tag, it processes the content using the plugin.
 	 * If the payload does not contain a value for the merge tag, it replaces the tag with an empty string.
 	 */
+/*
 
+	// NOTE: THIS PROCESS HAS BEEN MOVED TO _PROCESSCONTAINERS().
+	//       THERE WILL LIKELY BE MORE SIMILAR CORE CHANGES.
+	
 	_processSingles(input, payload) {
 		
 		// Match unescaped TextSynth tags, ignoring surrounding whitespaces within the tags.
 		const mergeTagRegex = new RegExp(
-			`(?<!\\\\)${this.delimiters.enc.start}\\s*(.*?)\\s*(?<!\\\\)${this.delimiters.enc.end}`,
+			`(?<!\\\\)${this.delimiters.esc.start}\\s*(.*?)\\s*(?<!\\\\)${this.delimiters.esc.end}`,
 			'g'
 		)
 		
@@ -500,14 +515,14 @@ class TextMerger {
 		
 		// Remove preceding escape characters for delimiters.
 		let finalInput = processedInput.replace(
-			new RegExp(`\\\\(${this.delimiters.enc.start}|${this.delimiters.enc.end})`, 'g'), 
+			new RegExp(`\\\\(${this.delimiters.esc.start}|${this.delimiters.esc.end})`, 'g'), 
 			'$1'
 		)
 		
 		return finalInput
 		
 	}
-	
+*/	
 	_processSingleTag(match, mergeTag, payload) {
 		
 		let { processors, cargo } = this._parseMergeTag(mergeTag, payload)
@@ -567,7 +582,7 @@ class TextMerger {
 			foundContainer = false
 			
 			const mergeTagRegex = new RegExp(
-				`${this.delimiters.enc.start}\\s*(.*?)\\s*${this.delimiters.enc.end}(\\n)?`, 
+				`(?<!\\\\)${this.delimiters.esc.start}\\s*(.*?)\\s*(?<!\\\\)${this.delimiters.esc.end}`,
 				'gs'
 			)
 			
@@ -578,9 +593,23 @@ class TextMerger {
 				const [fullMatch, mergeTag] = match
 				const { processors, cargo } = this._parseMergeTag(mergeTag, payload)
 				
-				if(this.tags[processors[0]?.name]?.kind !== 'container'){
+				// IF NOT CONTAINER - RUN AS SIGLE
+				if (this.tags[processors[0]?.name]?.kind !== 'container') {
+					
+					// Process the single tag using the appropriate method
+					let replacement = this._processSingleTag(fullMatch, mergeTag, payload)
+					
+					// Replace the matched tag in the output
+					output = output.slice(0, match.index) + replacement + output.slice(match.index + fullMatch.length)
+					
+					// Reset regex index due to output modifications
+					mergeTagRegex.lastIndex = match.index + replacement?.length
+					
 					continue
+					
 				}
+				
+				// CONTINUE WITH CONTAINER...
 				
 				foundContainer = true;
 				const closingTag = `${this.delimiters.raw.start}/${processors[0].name}${this.delimiters.raw.end}`;
@@ -656,10 +685,10 @@ class TextMerger {
 	 */
 	_findClosingTagIndex(input, startIndex, tagName) {
 		
-		let { enc, raw } = this.delimiters
+		let { esc, raw } = this.delimiters
 		
-		const openingTagPattern = new RegExp(`${enc.start}${tagName}`, 'g')
-		const closingTagPattern = new RegExp(`${enc.start}\\/${tagName}${enc.end}`, 'g')
+		const openingTagPattern = new RegExp(`${esc.start}${tagName}`, 'g')
+		const closingTagPattern = new RegExp(`${esc.start}\\/${tagName}${esc.end}`, 'g')
 		
 		let index = startIndex
 		let count = 1
