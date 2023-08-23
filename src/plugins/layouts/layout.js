@@ -101,7 +101,7 @@ export default {
 	populateLayoutBlocksObj(textMerger, params, layoutContent) {
 		
 		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
-		let {start, end} = textMerger.delimiters.enc
+		let {start, end} = textMerger.delimiters.esc
 		
 		// USE THE TOP OBJECT IN THE LAYOUT STACK
 		let blocks = textMerger.layoutStack[textMerger.layoutStack.length - 1]
@@ -127,7 +127,7 @@ export default {
 	renderLayout(textMerger, content, layoutContent, params, payload) {
 		
 		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
-		let {start, end} = textMerger.delimiters.enc
+		let {start, end} = textMerger.delimiters.esc
 		
 		// PROCESS THE CONTENT OF THE LAYOUT
 		let rendered = textMerger.process(content, payload)
