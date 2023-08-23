@@ -6,7 +6,8 @@ const textSynth = await TextSynth()
 // Test payload
 const payload = {
 	data: {
-		escContent: "Hello &lbrack;uppercase 'John Doe'&rbrack;",
+		//escContent: "Hello &lbrack;uppercase 'John Doe'&rbrack;",
+		escContent: "Hello \\[uppercase 'John Doe'\\]",
 		unEscContent: "Hello [uppercase 'John Doe']",
 		null: null,
 		undefined: undefined
@@ -14,7 +15,7 @@ const payload = {
 }
 
 // Turning off console.
-//console.log = () => {}
+console.log = () => {}
 
 describe('unescape_delimiters plugin', () => {
 
