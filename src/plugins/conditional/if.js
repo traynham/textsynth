@@ -52,7 +52,7 @@ export default {
 	// Processor logic
 	processor(request) {
 		
-		const { start, end } = request.textMerger.delimiters.enc
+		const { start, end } = request.textMerger.delimiters.esc
 		
 		// Check if all provided boolean values are true
 		const allTrue = request.params.every( item => Boolean(item) )
