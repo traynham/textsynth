@@ -7,13 +7,12 @@ textSynth.flush_comments = false
 
 const payload = {
   _synth: {
-	//views: './tests/support/views'
 	views: './tests/support/views'
   }
 }
 
 // Turning off console.
-//console.log = () => {}
+console.log = () => {}
 
 describe('importJSON plugin using simple syntax', () => {
 	
