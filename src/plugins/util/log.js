@@ -35,7 +35,8 @@ export default {
 	],
 
 	processor(req) {
-		return console.log(req.content)
+		console.log(req.content)
+		return ''
 	}
 
 }
