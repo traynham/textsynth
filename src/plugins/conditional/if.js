@@ -55,7 +55,11 @@ export default {
 		const { start, end } = request.textMerger.delimiters.esc
 		
 		// Check if all provided boolean values are true
-		const allTrue = request.params.every( item => Boolean(item) )
+		let conditionIsTrue = request.params.every( item => Boolean(item) )
+		
+		if(request.cargo.condition !== null){
+			conditionIsTrue = request.cargo.condition
+		}
 		
 		// Prepare elseTag for splitting and counting occurrences
 		const elseTag = `${start}else${end}`
@@ -76,6 +80,7 @@ export default {
 		elseContent = (elseContent || '').trim()
 		
 		// Return the appropriate content based on the condition
-		return allTrue ? mainContent : elseContent
+		return conditionIsTrue ? mainContent : elseContent
 	}
+	
 }
