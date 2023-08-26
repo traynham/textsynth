@@ -67,9 +67,10 @@ export default {
 		
 		if (Array.isArray(iterable)) {
 			
-			iterable.forEach((item) => {
+			iterable.forEach((item, index) => {
 				
 				payload.value = item
+				payload.index = index
 				payload[name] = item
 				
 				output += req.textMerger.process(req.content, payload)
@@ -78,11 +79,12 @@ export default {
 			
 		} else if (typeof iterable === 'object') {
 			
-			Object.entries(iterable).forEach(([key, value]) => {
+			Object.entries(iterable).forEach(([key, value], index) => {
 				
 				payload.name = key
 				payload.key = key
-				payload.value = value				
+				payload.value = value
+				payload.index = index
 				payload[name] = {key, value}
 				
 				output += req.textMerger.process(req.content, payload)
