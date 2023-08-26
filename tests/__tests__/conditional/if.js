@@ -56,6 +56,7 @@ describe('If plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('')
 	})
 	
+	
 	test('should allow else', () => {
 		const input = '[if: false]Hello Mod[else]else me[/if]'
 		expect(textSynth.merge(input, payload)).toBe('else me')
@@ -64,6 +65,55 @@ describe('If plugin', () => {
 	test('should not allow multiple else', () => {
 		const input = '[if: false]Hello Mod[else]else me[else]boom[/if]'
 		expect(textSynth.merge(input, payload)).toBe('') // RETURNS EMPTY STRING BECAUSE THROW IS SUPPRESSED IN TEXTSYNTH
+	})
+	
+})
+
+describe('If plugin conditionals', () => {
+	
+	test('should allow "==" equality', () => {
+		const input = `[if: 'one' == 'one']Hello Mod[/if]`
+		expect(textSynth.merge(input, payload)).toBe('Hello Mod')
+	})
+	
+	test('should allow "===" equality', () => {
+		const input = `[if: user.isAdmin === true]Hello Mod[/if]`
+		expect(textSynth.merge(input, payload)).toBe('Hello Mod')
+	})
+	
+	test('should allow "!=" equality', () => {
+		const input = `[if: user.isAdmin != true]Hello Mod[/if]`
+		expect(textSynth.merge(input, payload)).toBe('')
+	})
+	
+	test('should allow "!==" equality', () => {
+		const input = `[if: user.isAdmin !== true]Hello Mod[/if]`
+		expect(textSynth.merge(input, payload)).toBe('')
+	})
+	
+	test('should allow ">" operator', () => {
+		const input = `[if: 5 > 0]Bigger[/if]`
+		expect(textSynth.merge(input, payload)).toBe('Bigger')
+	})
+	
+	test('should allow "<" operator', () => {
+		const input = `[if: 0 < 5]Smaller[/if]`
+		expect(textSynth.merge(input, payload)).toBe('Smaller')
+	})
+	
+	test('should allow "<=" operator', () => {
+		const input = `[if: 5 <= 5]Smaller[/if]`
+		expect(textSynth.merge(input, payload)).toBe('Smaller')
+	})
+	
+	test('should allow ">=" operator', () => {
+		const input = `[if: 5 >= 5]Smaller[/if]`
+		expect(textSynth.merge(input, payload)).toBe('Smaller')
+	})
+	
+	test('should allow ">=" operator', () => {
+		const input = `[if: 5 = 5]Smaller[/if]`
+		expect(textSynth.merge(input, payload)).toBe('Smaller')
 	})
 	
 })
