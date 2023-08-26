@@ -824,7 +824,17 @@ class TextMerger {
 			classes: [],
 			id: '',
 			values: [],
-			using: null
+			using: null,
+			condition: null
+		}
+		
+		// Pattern for logical conditions (if, else, etc.)
+		let conditionMatch = args.match(/[\w"'.]+\s*([!=]==?|[<>]=?)\s*[\w"'.]+/g)
+		
+		if (conditionMatch) {
+			let condition = conditionMatch[0].trim()
+			cargo.condition = this._evaluateCondition(condition, payload)
+			args = args.replace(conditionMatch[0], '')
 		}
 		
 		// Pattern for "using"
@@ -896,6 +906,34 @@ class TextMerger {
 		return cargo
 		
 	}
+	
+	_evaluateCondition(condition, payload) {
+		
+		let [leftOperand, operator, rightOperand] = condition.split(/\s*([!=]==?|[<>]=?)\s*/)
+		leftOperand = this._getValueFromPath(leftOperand.trim(), payload)
+		rightOperand = this._getValueFromPath(rightOperand.trim(), payload)
+	  
+		switch (operator) {
+			case '==':
+				return leftOperand == rightOperand
+			case '===':
+				return leftOperand === rightOperand
+			case '!=':
+				return leftOperand != rightOperand
+			case '!==':
+				return leftOperand !== rightOperand
+			case '<':
+				return leftOperand < rightOperand
+			case '>':
+				return leftOperand > rightOperand
+			case '<=':
+				return leftOperand <= rightOperand
+			case '>=':
+				return leftOperand >= rightOperand
+		}
+	  
+	}
+
 
 	/**
 	 * Retrieves a value from an object based on a given path.
@@ -915,12 +953,21 @@ class TextMerger {
 			let destrung = path.trim().slice(1, -1)
 			
 			if (destrung.toLowerCase() === 'true') {
-				return true;
+				return true
 			} else if (destrung.toLowerCase() === 'false') {
-				return false;
+				return false
 			}
 			
 			return path.trim().slice(1, -1)
+		}
+		
+		// isBoolean
+		if (typeof path === 'string'){
+			if (path.toLowerCase() === 'true') {
+				return true
+			} else if (path.toLowerCase() === 'false') {
+				return false
+			}
 		}
 		
 		// isNumber
