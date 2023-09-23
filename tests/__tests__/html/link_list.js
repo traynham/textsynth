@@ -22,19 +22,20 @@ console.log = () => {}
 describe('linkList plugin', () => {
 
 	test('converts object to a list of HTML links', () => {
-		const input = "[linkList data.linkObject]"
+		const input = "[linkList: data.linkObject]"
 		const expectedOutput = `<ul><li><a href="https://www.google.com">Google</a></li><li><a href="https://www.facebook.com">Facebook</a></li><li><a href="https://www.twitter.com">Twitter</a></li></ul>`
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 
 	test('returns an empty list when the content is null', () => {
-		const input = "[linkList data.null]"
-		expect(textSynth.merge(input, payload)).toBe('null')
+		const input = "[linkList: data.null]"
+		//expect(textSynth.merge(input, payload)).toBe('null')
+		expect(textSynth.merge(input, payload)).toBe('')
 	})
 
 	test('returns an empty list when the content is undefined', () => {
-		const input = "[linkList data.undefined]"
-		expect(textSynth.merge(input, payload)).toBe('undefined')
+		const input = "[linkList: data.undefined]"
+		expect(textSynth.merge(input, payload)).toBe('')
 	})
 	
 })
