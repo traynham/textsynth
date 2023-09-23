@@ -32,4 +32,11 @@ describe('TextMerger custom settings', () => {
 		expect(result.err.code).toBe(400)
 	})
 	
+	test('throw error using mismatched tags', async () => {
+		const textSynth = await TextSynth()
+		const input = '[div]This is the div content[/p]'
+		const expectedOutput = 'Error: CONTAINER › Mismatched tags div and p'
+		expect(textSynth.merge(input, {})).toBe(expectedOutput)
+	})
+	
 })
