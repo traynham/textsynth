@@ -55,20 +55,20 @@ export default {
 	// Processor logic
 	processor(req) {
 		
-		let { content, params } = req
+		let { contents, params } = req
 		
 		// IF TRUE
 		if(params[0] == true){
-			return content.params[0]
+			return contents[0]
 		}
 		
 		// IF FALSE
 		if(params[0] == false){
-			return content.params[1]
+			return contents[1]
 		}
 		
 		// OTHERWISE
-		return content.params[2]
+		return contents[2]
 		
 	}
 
