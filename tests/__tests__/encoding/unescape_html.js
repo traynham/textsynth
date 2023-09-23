@@ -19,24 +19,24 @@ console.log = () => {}
 describe('unescape_html plugin', () => {
 
 	test('converts escaped HTML entities to their original characters', () => {
-		const input = "[unescape_html data.escContent]"
+		const input = "[unescape_html: data.escContent]"
 		const expectedOutput = payload.data.unEscContent
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 
 	test('returns the same string when there are no HTML entities', () => {
-		const input = "[unescape_html data.unEscContent]"
+		const input = "[unescape_html: data.unEscContent]"
 		expect(textSynth.merge(input, payload)).toBe(payload.data.unEscContent)
 	})
 
 	test('returns null when the content is null', () => {
-		const input = "[unescape_html data.null]"
-		expect(textSynth.merge(input, payload)).toBe('null')
+		const input = "[unescape_html: data.null]"
+		expect(textSynth.merge(input, payload)).toBe('')
 	})
 
 	test('returns an empty string when the content is undefined', () => {
-		const input = "[unescape_html data.undefined]"
-		expect(textSynth.merge(input, payload)).toBe('undefined')
+		const input = "[unescape_html: data.undefined]"
+		expect(textSynth.merge(input, payload)).toBe('')
 	})
 	
 })
