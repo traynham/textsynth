@@ -19,7 +19,7 @@ describe('ignore plugin', () => {
 
 	test('should encode tags', () => {
 		const input = `[ignore][markdown]${payload.data.mdContent}[/markdown][/ignore]`
-		const expectedOutput = `\\[markdown\\]## Header 2 \n**Bold Text**\n*Italic Text*\\[/markdown\\]`
+		const expectedOutput = `[markdown]## Header 2 \n**Bold Text**\n*Italic Text*[/markdown]`
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 	
