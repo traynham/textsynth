@@ -15,17 +15,17 @@ console.log = () => {}
 describe('truncate plugin', () => {
 
 	test('returns a string truncated to the specified length with a default suffix', () => {
-		const input = "[truncate(10) longString]"
+		const input = "[truncate(10): longString]"
 		expect(textSynth.merge(input, payload)).toBe('This is a ...')
 	})
 
 	test('returns a string truncated to the specified length with a custom suffix', () => {
-		const input = "[truncate(10, '---') longString]"
+		const input = "[truncate(10, '---'): longString]"
 		expect(textSynth.merge(input, payload)).toBe('This is a ---')
 	})
 
 	test('returns the string as is when its length is less than the specified maximum length', () => {
-		const input = "[truncate(50) shortString]"
+		const input = "[truncate(50): shortString]"
 		expect(textSynth.merge(input, payload)).toBe('Short string')
 	})
 	
