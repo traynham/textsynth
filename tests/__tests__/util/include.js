@@ -22,13 +22,13 @@ describe('include plugin', () => {
 	})
 
 	test('Include file requires an extension.', async () => {
-		const input = "[include 'header']"
+		const input = "[include: 'header']"
 		const result = await textSynth.merge(input, payload)
 		expect(result.trim()).toBe('ERROR: Include file name requires an extension.')
 	})
 	
 	test('Include header.js should fail.', async () => {
-		const input = "[include 'header.js']"
+		const input = "[include: 'header.js']"
 		const result = await textSynth.merge(input, payload)
 		expect(result).toBe('ERROR: Include file does not exist: tests/support/views/header.js')
 	})
@@ -36,7 +36,8 @@ describe('include plugin', () => {
 	test('Include with no content should throw error.', async () => {
 		const input = "[include:]"
 		const result = await textSynth.merge(input, payload)
-		expect(result.trim()).toBe('undefined')
+		//expect(result.trim()).toBe('undefined')
+		expect(result.trim()).toBe('ERROR: "include" tag expected content.')
 	})
 	
 	test('Include with no content should throw error, with string.', async () => {
