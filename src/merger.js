@@ -8,9 +8,9 @@ import { fileURLToPath } from 'url'
 import * as entities from 'entities'
 import Matter from 'gray-matter'
 import Lorry from '@jessetraynham/lorry'
+import * as peggy from "peggy"
 import { createSyncFn } from 'synckit'
 import walk from 'walk-sync'
-
 
 /**
  * Class for merging text using plugins and tags.
@@ -79,6 +79,8 @@ class TextMerger {
 		// LOAD CUSTOM PLUGINS
 		let custom = path.join(this._getAppRoot(), this.custom_plugins)
 		await this._loadPluginsDir(custom, 'Custom')
+		
+		this.peggy_setup()
 		
 	}
 	
@@ -151,7 +153,65 @@ class TextMerger {
 		
 	}
 	
-
+	
+	peggy_setup(){
+		
+		this.tagsByKind = { single: [], container: [] }
+		
+		for (let tag in this.tags) {
+			if(this.tags[tag].kind == 'container'){
+				this.tagsByKind.container.push(tag)
+			} else {
+				this.tagsByKind.single.push(tag)
+			}
+		}
+		
+		const __filename = fileURLToPath(import.meta.url) // PATH TO MERGER.JS
+		const __dirname = dirname(__filename)
+		const grammarPath = join(__dirname, 'grammar.peggy')
+		
+		const grammar = fs.readFileSync(grammarPath, 'utf-8')
+		
+		this.parser = peggy.default.generate(
+			grammar, 
+			{
+				trace: false, 
+				grammarSource: 'grammar.peggy'
+			}
+		)
+		
+	}
+	
+	peggy(template, payload){
+		
+		let parsed
+		let out = []
+		
+		try {
+			parsed = this.parser.parse(
+				template,
+				{
+					payload, 
+					tagsByKind: this.tagsByKind, 
+					tags: this.tags, 
+					textMerger: this,
+					grammarSource: 'grammar.peggy',
+					tracer: {trace: (items) => console.log('Trace items:', items)}
+				}
+			)
+		} catch (error) {
+			console.log('THERE WAS AN ERROR::', error.toString())
+			return error.toString()
+		}
+		
+		parsed.forEach(item => {
+			out.push(item.render)
+		})
+		
+		return out.join('')
+		
+	}
+	
 	/**
 	 * Merge a template with a payload.
 	 * @param {string} template - Template to be merged.
@@ -300,15 +360,14 @@ class TextMerger {
 	 */
 	process(template, payload) {
 		
-		let processed
+		// DUE TO NEWER CODE, THIS FUNCTION MAY NOT BE NEEDED.
+		// WE SHOULD PROBABLY JUST CALL THIS.PEGGY() DIRECTLY INSTEAD.
 		
-		// Process containers
-		processed = this._processContainers(template, payload)
+		// let processed
+		// processed = this.peggy(template, payload)
+		// return processed
 		
-		// Process single merge tags
-//		processed = this._processSingles(processed, payload)
-		
-		return processed
+		return this.peggy(template, payload)
 		
 	}
 
@@ -363,7 +422,6 @@ class TextMerger {
 			}
 			
 			// Run the plugin
-			//const result = this.plugins[name].processor(req)
 			const result = this.tags[name].processor(req)
 			
 			// Return the result
@@ -371,7 +429,6 @@ class TextMerger {
 			
 		} else {
 			
-			//throw new Error(`Plugin "${name}" does not exist.`);
 			return `Plugin "${name}" does not exist.`
 			
 		}
@@ -382,10 +439,6 @@ class TextMerger {
 	 * @param {Object} options - Options for setting delimiters.
 	 */
 	setDelimiters(delimiters = this.delimiters_default){
-		
-		if(delimiters[0] === '<' || delimiters[1] === '>' ){
-			delimiters = this.delimiters_default
-		}
 		
 		let [ start, end ] = delimiters
 		
@@ -479,507 +532,6 @@ class TextMerger {
 			plugin.suite = suite
 			this.use(plugin)
 		}
-		
-	}
-	
-	/**
-	 * Process "single" merge tags in a given input string.
-	 * 
-	 * @param {string} input - The input string with merge tags.
-	 * @param {Object} payload - The object containing data to replace merge tags.
-	 *
-	 * @returns {string} The input string with "single" merge tags replaced with corresponding values from the payload.
-	 *
-	 * This function operates by using a regular expression to identify single merge tags in the input string.
-	 * It then fetches the corresponding value from the payload using a defined path.
-	 * If a plugin is associated with the tag, it processes the content using the plugin.
-	 * If the payload does not contain a value for the merge tag, it replaces the tag with an empty string.
-	 */
-/*
-
-	// NOTE: THIS PROCESS HAS BEEN MOVED TO _PROCESSCONTAINERS().
-	//       THERE WILL LIKELY BE MORE SIMILAR CORE CHANGES.
-	
-	_processSingles(input, payload) {
-		
-		// Match unescaped TextSynth tags, ignoring surrounding whitespaces within the tags.
-		const mergeTagRegex = new RegExp(
-			`(?<!\\\\)${this.delimiters.esc.start}\\s*(.*?)\\s*(?<!\\\\)${this.delimiters.esc.end}`,
-			'g'
-		)
-		
-		// Process each match.
-		let processedInput = input.replace(mergeTagRegex, (match, mergeTag) => {
-			return this._processSingleTag(match, mergeTag, payload)
-		})
-		
-		// Remove preceding escape characters for delimiters.
-		let finalInput = processedInput.replace(
-			new RegExp(`\\\\(${this.delimiters.esc.start}|${this.delimiters.esc.end})`, 'g'), 
-			'$1'
-		)
-		
-		return finalInput
-		
-	}
-*/	
-	_processSingleTag(match, mergeTag, payload) {
-		
-		let { processors, cargo } = this._parseMergeTag(mergeTag, payload)
-			
-		for (const { name, params } of processors) {
-			
-			const plugin = this.tags[name]
-			
-			// UNDEFINED PLUGINS...
-			if (!plugin && this.showUndefinedTags) {
-				return match
-			} else if(!plugin &&!this.showUndefinedTags) {
-				return ''
-			}
-			
-			const request = {
-				cargo,
-				content: cargo?.params.length === 1 ? cargo?.params[0] : cargo,
-				params: params,
-				payload,
-				textMerger: this
-			}
-			
-			try {
-				cargo = this.runPlugin(name, request)
-			} catch (e) {
-				console.log(`Error running "${name}" plugin: ${e}`)
-			}
-			
-		}
-		
-		return cargo
-	}
-
-
-	/**
-	 * Process "container" merge tags in a given input string.
-	 * 
-	 * @param {string} input - The input string with container merge tags.
-	 * @param {Object} payload - The object containing data to replace merge tags.
-	 *
-	 * @returns {string} The input string with "container" merge tags replaced with corresponding values from the payload.
-	 *
-	 * This function operates by using a regular expression to identify container merge tags in the input string.
-	 * It then fetches the corresponding value from the payload using a defined path.
-	 * If a plugin is associated with the tag, it processes the content using the plugin.
-	 * It recursively processes nested container tags after processing the outer container.
-	 * If the payload does not contain a value for the merge tag, it replaces the tag with an empty string.
-	 */
-	_processContainers(input, payload) {
-	
-		let output = input
-		let foundContainer
-		
-		do {
-			
-			foundContainer = false
-			
-			const mergeTagRegex = new RegExp(
-				`(?<!\\\\)${this.delimiters.esc.start}\\s*(.*?)\\s*(?<!\\\\)${this.delimiters.esc.end}`,
-				'gs'
-			)
-			
-			let match
-			
-			while ((match = mergeTagRegex.exec(output))) {
-				
-				const [fullMatch, mergeTag] = match
-				const { processors, cargo } = this._parseMergeTag(mergeTag, payload)
-				
-				// IF NOT CONTAINER - RUN AS SIGLE
-				if (this.tags[processors[0]?.name]?.kind !== 'container') {
-					
-					// Process the single tag using the appropriate method
-					let replacement = this._processSingleTag(fullMatch, mergeTag, payload)
-					
-					// Replace the matched tag in the output
-					output = output.slice(0, match.index) + replacement + output.slice(match.index + fullMatch.length)
-					
-					// Reset regex index due to output modifications
-					mergeTagRegex.lastIndex = match.index + replacement?.length
-					
-					continue
-					
-				}
-				
-				// CONTINUE WITH CONTAINER...
-				
-				foundContainer = true;
-				const closingTag = `${this.delimiters.raw.start}/${processors[0].name}${this.delimiters.raw.end}`;
-				const closingIndex = this._findClosingTagIndex(output, match.index, processors[0].name)
-				
-				if (closingIndex === -1) {
-					return `ERROR: The closing tag for "${processors[0]?.name}" is missing. Please ensure that all tags are properly closed.`
-				}
-				
-				const content = output.substring(match.index + fullMatch.length, closingIndex)
-				
-				let processedContent = content; // Do not process nested containers at this point
-				
-				// Apply each processor (plugin) in order
-				processors.forEach(({ name }) => {
-					
-					const plugin = this.tags[name]
-					
-					if (plugin) {
-						
-						const request = {
-							cargo,
-							content: processedContent,
-							params: cargo?.params,
-							payload,
-							textMerger: this,
-						}
-						
-						let response = ''
-						
-						try {
-							response = plugin.processor(request)
-						} catch (e) {
-							console.log(`Error running "${name}" plugin: ${e}`)
-						}
-						
-						processedContent = response
-						
-					}
-				})
-				
-				// Process nested containers after processing the outer container
-				processedContent = this._processContainers(processedContent, payload)
-				
-				// Replace the entire content between the opening and closing tags, including the closing tag
-				output = output.slice(0, match.index) + processedContent + output.slice(closingIndex + closingTag.length)
-				
-				// Reset regex index due to output modifications
-				mergeTagRegex.lastIndex = match.index + processedContent.length;
-				
-				break
-				
-			}
-			
-		} while (foundContainer)
-		
-		return output
-		
-	}
-
-	/**
-	 * Find the index of the closing tag corresponding to a given opening tag in a string.
-	 * 
-	 * @param {string} input - The input string that contains tags.
-	 * @param {number} startIndex - The index in the string to start searching from.
-	 * @param {string} tagName - The name of the tag to find the closing index for.
-	 * 
-	 * @returns {number} The index of the closing tag in the input string.
-	 *
-	 * This function keeps track of nested tags of the same type by incrementing a count for each opening tag found 
-	 * and decrementing for each closing tag. When the count reaches zero, the index of the closing tag is returned.
-	 * If no corresponding closing tag is found an error is thrown.
-	 */
-	_findClosingTagIndex(input, startIndex, tagName) {
-		
-		let { esc, raw } = this.delimiters
-		
-		const openingTagPattern = new RegExp(`${esc.start}${tagName}`, 'g')
-		const closingTagPattern = new RegExp(`${esc.start}\\/${tagName}${esc.end}`, 'g')
-		
-		let index = startIndex
-		let count = 1
-		
-		while (count > 0) {
-			
-			const openingIndex = this._findNextIndex(
-				input,
-				openingTagPattern,
-				index + raw.start.length + tagName.length
-			)
-			
-			const closingIndex = this._findNextIndex(
-				input, 
-				closingTagPattern, 
-				index + raw.start.length + tagName.length + 1 + (raw.end.length - raw.start.length)
-			)
-			
-			if (closingIndex === -1) {
-				return -1
-			} else if (openingIndex === -1 || closingIndex < openingIndex) {
-				count--
-				index = closingIndex
-			} else {
-				count++
-				index = openingIndex
-			}
-		}
-		
-		return index
-		
-	}
-	
-	/**
-	 * Finds the index of the next match for a specified pattern in a string.
-	 * 
-	 * @param {string} input - The input string to search in.
-	 * @param {RegExp} pattern - The pattern to match in the input string.
-	 * @param {number} startIndex - The index from which to start the search.
-	 * 
-	 * @returns {number} The index of the next match for the specified pattern, or -1 if no match is found.
-	 * 
-	 * This function is typically used to search for patterns in large text data. It resets the 
-	 * lastIndex property of the RegExp object to the provided startIndex before executing the search.
-	 */
-	_findNextIndex(input, pattern, startIndex) {
-		pattern.lastIndex = startIndex
-		const match = pattern.exec(input)
-		return match ? match.index : -1
-	}
-
-	/**
-	 * Parses a merge tag string and returns its components and details.
-	 * 
-	 * @param {string} mergeTag - The merge tag string to parse.
-	 * 
-	 * @returns {object} An object containing the details of the merge tag. This object has the following properties:
-	 *   - kind: The type of merge tag (e.g., 'single', 'container').
-	 *   - processors: An array of objects, each containing the name and parameters of a processor used in the merge tag.
-	 *   - name: The name of the merge tag.
-	 * 
-	 * A merge tag string typically has a form like 'tagParam1: tagParam2'. This function splits such a string into its 
-	 * individual components and provides details about each component. If the merge tag string is associated with a 
-	 * known tag in this.tags, it will be identified as a 'container'. Otherwise, it will be treated as a 'single' merge tag.
-	 * 
-	 * The processors of the merge tag are also parsed and their names and parameters are returned in the 'processors' property.
-	 */
-	_parseMergeTag(mergeTag, payload) {
-		
-		// TAG SHAPE: Colon after name is optional, space is not.
-		let [tags, cargoStr] = mergeTag.split(/(?<!\([^)]*):? (.+)/).map((part) => part.trim())
-		
-		let cargo2 = this._gather_cargo(cargoStr, payload)
-		
-		// IF CONTAINER TAG WITH NO PARAMS OR CONTENT.
-		if (this.tags[mergeTag]?.kind === 'container') {
-			return { kind: 'container', processors: [{name: mergeTag, params: []}], name: mergeTag }
-		}
-		
-		// If there are no processors, treat it as a simple merge tag
-		
-		if (!cargoStr) {
-			return { kind: 'single', processors: [], name: tags, cargo: this._getValueFromPath(tags.trim(), payload) }
-		}
-		
-		const tagParamPairs = tags.match(/[\w]+(\([^)]*\))?/g)
-		const processors = tagParamPairs.map((tagParamPair) => {
-			
-			const [tagName, ...paramsStr] = tagParamPair.split(/[()]/).filter((part) => part !== '')
-			
-			let params = paramsStr.length
-				? paramsStr[0]
-					.split(/,(?=(?:[^"']*["'][^"']*["'])*[^"']*$)/)
-					.map((param) => {
-						//param = param.trim().replace(/^["']+|["']+$/g, '');
-						if (param.toLowerCase() === 'true') return true;
-						if (param.toLowerCase() === 'false') return false;
-						return param;
-					})
-				: [];
-		
-			params = params.map(param => this._getValueFromPath(param, payload))
-			
-			return { name: tagName, params }
-			
-		})
-		
-		let out = { 
-			processors, 
-			cargo: cargo2,
-			cargo2
-		}
-		
-		return out
-		
-	}
-
-	/**
-	 * This method is responsible for parsing a given string of arguments into an object.
-	 * The object contains the attributes, classes, id, and other values found in the arguments.
-	 *
-	 * @param {string} args - A string of arguments to parse.
-	 * @returns {Object} An object with keys: attributes, classes, id, otherValues. Each key is associated with an array or a string of extracted values.
-	 */
-
-	_gather_cargo(args, payload) {
-		
-		if(!args) return
-		
-		// Initializing the cargo object that will store the parsed values
-		let cargo = {
-			attributes: {},
-			classes: [],
-			id: '',
-			values: [],
-			using: null,
-			condition: null
-		}
-		
-		// Pattern for logical conditions (if, else, etc.)
-		let conditionMatch = args.match(/[\w"'.]+\s*([!=]==?|[<>]=?)\s*[\w"'.]+/g)
-		
-		if (conditionMatch) {
-			let condition = conditionMatch[0].trim()
-			cargo.condition = this._evaluateCondition(condition, payload)
-			args = args.replace(conditionMatch[0], '')
-		}
-		
-		// Pattern for "using"
-		let usingMatch = args.match(/^.+\s+using\s+.+$/g) // FULL STRING MATCH.
-		
-		if (usingMatch) {
-			let [name, value] = usingMatch[0].split(/\s+using\s+/)
-			cargo.using = {name, value: this._getValueFromPath(value, payload)}
-			cargo.values.push(value)
-			args = args.replace(usingMatch[0], '')
-		}
-		
-		// Pattern for attributes
-		let attrMatch = args.match(/["']?([\w-]+)["']? *= *["']?([^"']+)["']?/g);
-
-		if(attrMatch){
-			attrMatch.forEach(attr => {
-				let [key, value] = attr.split('=')
-				key = key.trim().replace(/^['"]|['"]$/g, '')
-				value = value?.trim().replace(/^['"]|['"]$/g, '')
-				cargo.attributes[key] = value
-				args = args.replace(attr, '') // remove the matched attribute
-			})
-		}
-		
-		// Pattern for classes
-		let classMatch = args.match(/(?:^|\s)(\.[\w-]+)/g)
-		
-		if(classMatch){
-			
-			let attr = cargo.attributes?.class?.split(/ +/g) || []
-			classMatch.push(...attr)
-			
-			classMatch.forEach(item => {
-				
-				args = args.replace(item, '') // remove the matched class
-				
-				let cls = item.trim().replace('.', '')
-				if(!cargo.classes.includes(cls)){
-					cargo.classes.push(cls)
-				}
-				
-			})
-			
-		}
-		
-		// Pattern for id
-		let idMatch = args.match(/#[\w-]+/g)
-		
-		if(idMatch && idMatch[0]){
-			cargo.id = idMatch[0].slice(1)
-			args = args.replace(idMatch[0], '') // remove the matched id
-		}
-		
-		// Pattern for other values
-		let otherValuesMatch = args.trim().match(/(".*?"|'.*?'|[^, ]+)/g)
-		if(otherValuesMatch){
-			otherValuesMatch.forEach(val => {
-				let value = val.trim()
-				cargo.values.push(value)
-			})
-		}
-		
-		cargo.params = cargo.values.map(param => {
-			return this._getValueFromPath(param, payload)
-		})
-		
-		// Return the populated cargo object
-		return cargo
-		
-	}
-	
-	_evaluateCondition(condition, payload) {
-		
-		let [leftOperand, operator, rightOperand] = condition.split(/\s*([!=]==?|[<>]=?)\s*/)
-		leftOperand = this._getValueFromPath(leftOperand.trim(), payload)
-		rightOperand = this._getValueFromPath(rightOperand.trim(), payload)
-	  
-		switch (operator) {
-			case '==':
-				return leftOperand == rightOperand
-			case '===':
-				return leftOperand === rightOperand
-			case '!=':
-				return leftOperand != rightOperand
-			case '!==':
-				return leftOperand !== rightOperand
-			case '<':
-				return leftOperand < rightOperand
-			case '>':
-				return leftOperand > rightOperand
-			case '<=':
-				return leftOperand <= rightOperand
-			case '>=':
-				return leftOperand >= rightOperand
-		}
-	  
-	}
-
-
-	/**
-	 * Retrieves a value from an object based on a given path.
-	 *
-	 * @param {(string|Array|Object)} path - The path to the desired value. This can be a string representing a property path, or an array, or an object.
-	 * @param {Object} obj - The object from which to retrieve the value.
-	 * 
-	 * @returns {(string|Array|Object|number|boolean|undefined)} The value found at the given path within the object. If the path is an array or an object, it is returned as is. If the path is a string representing a boolean or a number, the function will attempt to parse and return it as the corresponding primitive type. If the path is a string, it is assumed to be a property path, and the function will attempt to retrieve the corresponding value within the object.
-	 *
-	 * This function supports complex nested paths in the form of string-based property paths, e.g., 'prop1.prop2[0].prop3'.
-	 */
-	_getValueFromPath(path, object) {
-		
-		// IF LITERAL STRING RETURN WITHOUT QUOTES.
-		if (typeof path === 'string' && /^["'].*["']$/.test(path.trim() )) { 
-			
-			let destrung = path.trim().slice(1, -1)
-			
-			if (destrung.toLowerCase() === 'true') {
-				return true
-			} else if (destrung.toLowerCase() === 'false') {
-				return false
-			}
-			
-			return path.trim().slice(1, -1)
-		}
-		
-		// isBoolean
-		if (typeof path === 'string'){
-			if (path.toLowerCase() === 'true') {
-				return true
-			} else if (path.toLowerCase() === 'false') {
-				return false
-			}
-		}
-		
-		// isNumber
-		if (!isNaN(+path) || path === '0') {
-			return +path
-		}
-		
-		// Default case: treat path as a string representing a property path
-		const value = path.split('.').reduce((obj, i) => (obj?.[i]), object)
-		
-		// Return a shallow copy of the array if it's an array, or return the value directly
-		return Array.isArray(value) ? [...value] : value
 		
 	}
 
