@@ -18,22 +18,22 @@ console.log = () => {}
 describe('reverse plugin', () => {
 
 	test('reverses a string', () => {
-		const input = "[reverse site.title]"
+		const input = "[reverse: site.title]"
 		expect(textSynth.merge(input, payload)).toBe('dlroW olleH')
 	})
 
 	test('reverses the order of elements in an array', () => {
-		const input = "[reverse numbers]"
+		const input = "[reverse: numbers]"
 		expect(textSynth.merge(input, payload)).toEqual('5,4,3,2,1')
 	})
 
 	test('returns an empty string when the string is empty', () => {
-		const input = "[reverse '']"
+		const input = "[reverse: '']"
 		expect(textSynth.merge(input, payload)).toBe('')
 	})
 
 	test('returns an empty array when the array is empty', () => {
-		const input = "[reverse empty]"
+		const input = "[reverse: empty]"
 		expect(textSynth.merge(input, payload)).toEqual('')
 	})
 	
