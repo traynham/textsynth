@@ -20,24 +20,24 @@ console.log = () => {}
 describe('unescape_delimiters plugin', () => {
 
 	test('converts escaped delimiters to raw delimiters', () => {
-		const input = "[unescape_delimiters data.escContent]"
+		const input = "[unescape_delimiters: data.escContent]"
 		const expectedOutput = payload.data.unEscContent
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 
 	test('returns the same string when there are no escaped delimiters', () => {
-		const input = "[unescape_delimiters data.unEscContent]"
+		const input = "[unescape_delimiters: data.unEscContent]"
 		expect(textSynth.merge(input, payload)).toBe(payload.data.unEscContent)
 	})
 
 	test('returns null when the content is null', () => {
-		const input = "[unescape_delimiters data.null]"
-		expect(textSynth.merge(input, payload)).toBe('null')
+		const input = "[unescape_delimiters: data.null]"
+		expect(textSynth.merge(input, payload)).toBe('')
 	})
 
 	test('returns an empty string when the content is undefined', () => {
-		const input = "[unescape_delimiters data.undefined]"
-		expect(textSynth.merge(input, payload)).toBe('undefined')
+		const input = "[unescape_delimiters: data.undefined]"
+		expect(textSynth.merge(input, payload)).toBe('')
 	})
 	
 })
