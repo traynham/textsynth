@@ -83,14 +83,22 @@ export default {
 		let tag = this.alias || 'div'
 		let attr = {...req.cargo?.attributes}
 		
+		if(attr.class){
+			attr.class.split(' ').forEach( at => {
+				if(!req.cargo.classes.includes(at)){ req.cargo.classes.push(at) }
+			})
+		}
+		
 		// CLASSES
-		if(req.cargo?.classes.length){ attr.class = req.cargo.classes.join(' ') }
+		if(req.cargo?.classes.length){ 
+			attr.class = req.cargo.classes.sort().join(' ')
+		}
 		
 		// ID
 		if(req.cargo?.id){ attr.id = req.cargo?.id }
 		
 		// VALUES - DEAL WITH QUOTES AND SPACES.
-		if(req.cargo?.values){ 
+		if(req.cargo?.values){			
 			req.cargo.values = req.cargo.values.map(value => {
 				if(value.includes(' ')){ return value }
 				return value.replace(/['"]/g, '')
@@ -100,7 +108,7 @@ export default {
 		const attributeString = [
 			'',
 			...Object.entries(attr).map(([key, value]) => `${key}="${value}"`),
-			...req.cargo?.values || []
+			...req.cargo.values //|| []
 		].join(' ')
 		
 		return `<${tag}${attributeString}>${req.content}</${tag}>`
