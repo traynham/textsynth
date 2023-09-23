@@ -15,17 +15,27 @@ console.log = () => {}
 describe('substring plugin', () => {
 
 	test('returns a substring from the specified start and end indices', () => {
-		const input = "[substring(0, 4) testString]"
+		const input = "[substring(0, 4): testString]"
 		expect(textSynth.merge(input, payload)).toBe('This')
 	})
+	
+	test('returns the full string when params are both zero.', () => {
+		const input = "[substring(0, 0): testString]"
+		expect(textSynth.merge(input, payload)).toBe('This is a test string')
+	})
 
-	test('returns the full string when start and end are not specified', () => {
-		const input = "[substring() testString]"
+	test('returns the full string when params are not present', () => {
+		const input = "[substring(2): testString]"
+		expect(textSynth.merge(input, payload)).toBe('This is a test string')
+	})
+	
+	test('returns the full string when params are empty', () => {
+		const input = "[substring(): testString]"
 		expect(textSynth.merge(input, payload)).toBe('This is a test string')
 	})
 
 	test('throws an error when trying to apply substring to a non-string', () => {
-		const input = "[substring(0, 4) nonString]"
+		const input = "[substring(0, 4): nonString]"
 		expect(textSynth.merge(input, payload)).toBe(`${payload.nonString}`)
 	})
 	
