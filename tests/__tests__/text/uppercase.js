@@ -15,17 +15,17 @@ console.log = () => {}
 describe('uppercase plugin', () => {
 
 	test('converts a lowercase string to uppercase', () => {
-		const input = "[uppercase lowercaseString]"
+		const input = "[uppercase: lowercaseString]"
 		expect(textSynth.merge(input, payload)).toBe('THIS IS A TEST')
 	})
 
 	test('converts a mixed case string to uppercase', () => {
-		const input = "[uppercase mixedcaseString]"
+		const input = "[uppercase: mixedcaseString]"
 		expect(textSynth.merge(input, payload)).toBe('THIS IS A TEST')
 	})
 
 	test('returns the same string when already in uppercase', () => {
-		const input = "[uppercase 'HELLO']"
+		const input = "[uppercase: 'HELLO']"
 		expect(textSynth.merge(input, payload)).toBe('HELLO')
 	})
 	
