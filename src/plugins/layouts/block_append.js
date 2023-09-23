@@ -38,12 +38,16 @@ export default {
 
 	processor({ content, params, payload, textMerger}) {
 		
+		if(!payload._layoutStack){
+			return ''
+		}
+		
 		// GET THE BLOCK NAME FROM THE PARAMS
-		const blockName = params[0]
+		const blockName = params[0].value
 		
 		// ACCESS THE CURRENT LAYOUT BY GETTING THE TOP ITEM FROM THE LAYOUT STACK
-		let currentLayout = textMerger.layoutStack[textMerger.layoutStack.length - 1]
-		
+		let currentLayout = payload._layoutStack[payload._layoutStack.length - 1]
+
 		// APPEND PROCESSED CONTENT TO THE CURRENT BLOCK. IF THE BLOCK DOES NOT EXIST,
 		// IT CREATES A NEW BLOCK WITH THE PROCESSED CONTENT.
 		currentLayout[blockName] = currentLayout[blockName] + textMerger.process(content, payload)
