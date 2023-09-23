@@ -15,12 +15,12 @@ console.log = () => {}
 describe('camelCase plugin', () => {
 
 	test('converts a string to camelCase', () => {
-		const input = "[camelcase testString]"
+		const input = "[camelcase: testString]"
 		expect(textSynth.merge(input, payload)).toBe('thisIsATest')
 	})
 
 	test('returns the original content if it is not a string', () => {
-		const input = "[camelcase nonString]"
+		const input = "[camelcase: nonString]"
 		expect(textSynth.merge(input, payload)).toBe('12345')
 	})
 })
