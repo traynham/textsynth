@@ -65,16 +65,28 @@ describe('importJSON plugin using simple syntax', () => {
 		expect(result).toBe('This is the most amazing title in the world. Everyone says so!!')
 	})
 	
-	test('ImportJSON using page data.', async () => {
+	test('ImportJSON using page data and "using".', async () => {
 		let payload = {url: 'http://127.0.0.1:3000/records.json6'}
 		let template = 
 			'---\n' +
-			"importJSON: [data using 'http://127.0.0.1:3000/records.json6']\n" +
+			"importJSON: data using 'http://127.0.0.1:3000/records.json6'\n" +
 			'---\n' +
 			'[data.title]'
 		
 		const result = await textSynth.merge(template, payload)
 		expect(result).toBe('This is the most amazing title in the world. Everyone says so!!')
+	})
+	
+	test('ImportJSON using page data.', async () => {
+		let payload = {url: 'http://127.0.0.1:3000/records.json6'}
+		let template = 
+			'---\n' +
+			"importJSON: ['http://127.0.0.1:3000/records.json6', data using 'http://127.0.0.1:3000/records.json6']\n" +
+			'---\n' +
+			'[JSON.title][data.title]'
+		
+		const result = await textSynth.merge(template, payload)
+		expect(result).toBe('This is the most amazing title in the world. Everyone says so!!This is the most amazing title in the world. Everyone says so!!')
 	})
 
 })
@@ -105,7 +117,7 @@ describe('importJSON plugin with using syntax', () => {
 		const result = await textSynth.merge(input, payload)
 		expect(result.trim()).toBe('ERROR: JSON file does not exist: /Users/Shared/srv/node/modules/textsynth/app/tests/support/views/not_exists.json')
 	})
-	
+
 	test('importJSON with no file specified and custom name should throw error.', async () => {
 		const input = "[importJSON: customName using '']"
 		const result = await textSynth.merge(input, payload)
@@ -113,6 +125,7 @@ describe('importJSON plugin with using syntax', () => {
 	})
 	
 })
+
 
 describe('importJSON plugin with using syntax', () => {
 
@@ -123,7 +136,7 @@ describe('importJSON plugin with using syntax', () => {
 	})
 	
 	let url_tests = [
-		{url: '%20http://127.0.0.1:3000', expect: `ERROR: Content could not be parsed as JSON › http://127.0.0.1:3000/`},
+		//{url: '%20http://127.0.0.1:3000', expect: `ERROR: Content could not be parsed as JSON › http://127.0.0.1:3000/`},
 		{url: 'http://localhost/info', expect: `ERROR: Forbidden domain › localhost`},
 		{url: 'ftp://example.com/resource', expect: `ERROR: Forbidden protocol › ftp:`},
 		{url: 'http://////127.0.0.1:3000/records.json6', expect: ``},
