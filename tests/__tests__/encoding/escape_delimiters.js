@@ -15,17 +15,17 @@ console.log = () => {}
 describe('escape_delimiters plugin', () => {
 
 	test('escapes TextSynth tag delimiters', () => {
-		const input = "[escape_delimiters text]"
+		const input = "[escape_delimiters: text]"
 		expect(textSynth.merge(input, payload)).toBe("\\[uppercase 'boom'\\]")  // Replace 'Magic' with the expected escaped string
 	})
 
 	test('returns an empty string when the content is empty', () => {
-		const input = "[escape_delimiters bogus]"
-		expect(textSynth.merge(input, payload)).toBe('undefined')
+		const input = "[escape_delimiters: bogus]"
+		expect(textSynth.merge(input, payload)).toBe('')
 	})
 	
 	test('returns an empty string when the content is null', () => {
-		const input = "[escape_delimiters bad]"
+		const input = "[escape_delimiters: bad]"
 		expect(textSynth.merge(input, payload)).toBe('')
 	})
 	
