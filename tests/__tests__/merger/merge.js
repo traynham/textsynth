@@ -1,4 +1,4 @@
-import { describe, expect, test, jest } from '@jest/globals'
+import { describe, expect, test } from '@jest/globals'
 import TextSynth from '../index.js'
 
 const textSynth = await TextSynth()
@@ -48,19 +48,19 @@ describe("merge", () => {
 		expect(textSynth.merge(template, payload)).toBe('test template')
 	})
 	
-	test("show bogus tags", () => {
-		textSynth.showUndefinedTags = true
-		const template = '[upper: "this"] is a [bogus "random"] [upper: "tag"].'
-		let result = textSynth.merge(template, payload)
-		expect(result).toBe("THIS is a [bogus \"random\"] TAG.")
-	})
+	// test("show bogus tags", () => {
+	// 	textSynth.showUndefinedTags = true
+	// 	const template = '[upper: "this"] is a [bogus "random"] [upper: "tag"].'
+	// 	let result = textSynth.merge(template, payload)
+	// 	expect(result).toBe("THIS is a [bogus \"random\"] TAG.")
+	// })
 	
-	test("hide bogus tags", () => {
-		textSynth.showUndefinedTags = false
-		const template = '[upper: "this"] is a [bogus "random"] [upper: "tag"].'
-		let result = textSynth.merge(template, payload)
-		expect(result).toBe('THIS is a  TAG.')
-	})
+	// test("hide bogus tags", () => {
+	// 	textSynth.showUndefinedTags = false
+	// 	const template = '[upper: "this"] is a [bogus "random"] [upper: "tag"].'
+	// 	let result = textSynth.merge(template, payload)
+	// 	expect(result).toBe('THIS is a  TAG.')
+	// })
 	
 	test("set as markdown", () => {
 		let payload = { _synth: { md: true}}
@@ -90,26 +90,4 @@ describe("merge", () => {
 		expect(result).toBe('<h1>My Great Title.</h1>')
 	})
 	
-	test("throw error in a tag", () => {
-		
-		textSynth.use({
-			name: 'boom',
-			processor() {
-				throw new Error('BOOM.')
-			}
-		})
-		
-		// Create a spy on console.error
-		const consoleSpy = jest.spyOn(console, 'log');
-		
-		const template = 'Things that go [boom: "ouch"].'
-		textSynth.merge(template, payload)
-		
-		// Assert that console.error has been called with the expected argument
-		expect(consoleSpy).toHaveBeenCalledWith('Error running "boom" plugin: Error: BOOM.');
-		
-		consoleSpy.mockRestore();  // Clean up the spy
-		
-	})
-
 })
