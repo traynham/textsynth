@@ -55,10 +55,10 @@ export default {
 		
 		// CREATE A STACK TO HANDLE NESTED LAYOUT RENDERING
 		// INITIALIZE IT IF IT DOESN'T EXIST YET
-		textMerger.layoutStack = textMerger.layoutStack || []
+		payload._layoutStack = payload._layoutStack || []
 		
 		// PUSH AN EMPTY OBJECT INTO THE STACK TO HANDLE THE CURRENT LAYOUT
-		textMerger.layoutStack.push({})
+		payload._layoutStack.push({})
 		
 		// REMOVE COMMENTS FROM THE LAYOUT CONTENT
 		layoutContent = textMerger.removeComments(layoutContent)
@@ -67,13 +67,13 @@ export default {
 		layoutContent = textMerger.removeLeadingTabs(layoutContent)
 		
 		// POPULATE THE BLOCKS OBJECT WITH THE INITIAL BLOCK CONTENT FROM THE LAYOUT
-		this.populateLayoutBlocksObj(textMerger, params, layoutContent) 
+		this.populateLayoutBlocksObj(textMerger, payload, params, layoutContent) 
 		
 		// RENDER THE LAYOUT WITH THE BLOCK CONTENT AND RETURN THE RESULT
 		let renderedLayout = this.renderLayout(textMerger, content, layoutContent, params, payload)
 		
 		// ONCE THE LAYOUT IS RENDERED, POP THE STACK TO CLEAN UP
-		textMerger.layoutStack.pop()
+		payload._layoutStack.pop()
 		
 		// RETURN THE RENDERED LAYOUT
 		return renderedLayout
@@ -86,7 +86,7 @@ export default {
 		if(payload.layout){ return payload.layout }
 		
 		// CONSTRUCT THE FULL PATH TO THE LAYOUT FILE
-		const layoutPath = path.join(payload._synth.views, params[0])
+		const layoutPath = path.join(payload._synth.views, params[0].value)
 		
 		// CHECK IF THE LAYOUT FILE EXISTS BEFORE READING IT
 		if (!fs.existsSync(layoutPath)) {
@@ -98,13 +98,14 @@ export default {
 		
 	},
 	
-	populateLayoutBlocksObj(textMerger, params, layoutContent) {
+	//populateLayoutBlocksObj(textMerger, params, layoutContent) {
+	populateLayoutBlocksObj(textMerger, payload, params, layoutContent) {
 		
 		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
 		let {start, end} = textMerger.delimiters.esc
 		
 		// USE THE TOP OBJECT IN THE LAYOUT STACK
-		let blocks = textMerger.layoutStack[textMerger.layoutStack.length - 1]
+		let blocks = payload._layoutStack[payload._layoutStack.length - 1]
 		
 		// FIND INITIAL BLOCK CONTENT IN THE LAYOUT AND POPULATE THE BLOCKS OBJECT
 		let initialBlockContentMatches
@@ -126,14 +127,19 @@ export default {
 	
 	renderLayout(textMerger, content, layoutContent, params, payload) {
 		
+		let rendered = ''
+		
 		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
 		let {start, end} = textMerger.delimiters.esc
 		
 		// PROCESS THE CONTENT OF THE LAYOUT
-		let rendered = textMerger.process(content, payload)
+		if(content){
+			rendered = textMerger.process(content, payload)
+		}
+		
 		
 		// USE THE TOP OBJECT IN THE LAYOUT STACK
-		let blocks = textMerger.layoutStack[textMerger.layoutStack.length - 1]
+		let blocks = payload._layoutStack[payload._layoutStack.length - 1]
 		
 		// IF THE PAYLOAD HAS A 'PAGE.BLOCK' PROPERTY, USE THE BLOCK FOR THE RENDERED CONTENT
 		if(payload.page.block){
