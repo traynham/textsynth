@@ -44,12 +44,15 @@ export default {
 	],
 
 	processor({content, params}) {
+		
 		let [start = 0, end = 0] = params
 		
+		if(params.length !== 2) return content
 		if(typeof content !== 'string') return content
 		if(start + end === 0) return content
 		
 		return content.substring(parseInt(start), parseInt(end))
+		
 	}
 	
 }
