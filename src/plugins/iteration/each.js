@@ -61,20 +61,20 @@ export default {
 		
 		if(req.cargo.using){
 			name = req.cargo.using.name
+			iterable = req.cargo.using.value
 		}
+		
+		if(!iterable){ return '' }
 		
 		let output = ''
 		
 		if (Array.isArray(iterable)) {
 			
 			iterable.forEach((item, index) => {
-				
 				payload.value = item
 				payload.index = index
 				payload[name] = item
-				
 				output += req.textMerger.process(req.content, payload)
-				
 			})
 			
 		} else if (typeof iterable === 'object') {
