@@ -41,26 +41,36 @@ export default {
 			output: '',
 			note: 'No content is shown as the condition evaluates to false.'
 		},
-		{
-			payload: "{ isAdmin: false }",
-			input: '[if isAdmin] Welcome admin. [else] Welcome user. [/if]',
-			output: 'Welcome user.',
-			note: 'The else content is shown as the condition evaluates to false.'
-		},
+		// {
+		// 	payload: "{ isAdmin: false }",
+		// 	input: '[if isAdmin] Welcome admin. [else] Welcome user. [/if]',
+		// 	output: 'Welcome user.',
+		// 	note: 'The else content is shown as the condition evaluates to false.'
+		// },
 	],
 
 	// Processor logic
 	processor(request) {
 		
-		const { start, end } = request.textMerger.delimiters.esc
+		let conditionIsTrue
 		
-		// Check if all provided boolean values are true
-		let conditionIsTrue = request.params.every( item => Boolean(item) )
-		
-		if(request.cargo.condition !== null){
+		// USE PARAMS
+		if(request.cargo.condition == null){
+			conditionIsTrue = request.params.every( item => Boolean(item) )
+			
+		// USE CARGO.CONDITION
+		} else {
 			conditionIsTrue = request.cargo.condition
 		}
 		
+		if(conditionIsTrue){
+			return request.textMerger.process(request.content, request.payload)
+		}
+		
+		return ''
+		
+		// ELSE IS CURRENTLY NOT SUPPORTED.
+		/*
 		// Prepare elseTag for splitting and counting occurrences
 		const elseTag = `${start}else${end}`
 		
@@ -81,6 +91,7 @@ export default {
 		
 		// Return the appropriate content based on the condition
 		return conditionIsTrue ? mainContent : elseContent
+		*/
 	}
 	
 }
