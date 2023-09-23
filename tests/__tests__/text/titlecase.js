@@ -15,12 +15,12 @@ console.log = () => {}
 describe('titlecase plugin', () => {
 
 	test('returns a string with each word capitalized', () => {
-		const input = "[titlecase testString]"
+		const input = "[titlecase: testString]"
 		expect(textSynth.merge(input, payload)).toBe('This Is A Test String')
 	})
 
 	test('throws an error when trying to apply titlecase to a non-string', () => {
-		const input = "[titlecase nonString]"
+		const input = "[titlecase: nonString]"
 		expect(textSynth.merge(input, payload)).toBe(`${payload.nonString}`)
 	})
 	
