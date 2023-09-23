@@ -25,17 +25,17 @@ describe('random plugin', () => {
 	})
 
 	test('returns a random element from an array', () => {
-		const input = "[random fruits]"
+		const input = "[random: fruits]"
 		expect(textSynth.merge(input, payload)).toBe('Cherry')
 	})
 
 	test('returns a random character from a string', () => {
-		const input = "[random testString]"
+		const input = "[random: testString]"
 		expect(textSynth.merge(input, payload)).toBe('w')
 	})
 
 	test('returns an empty string when the input is empty', () => {
-		const input = "[random '']"
+		const input = "[random: '']"
 		expect(textSynth.merge(input, payload)).toBe('')
 	})
 })
