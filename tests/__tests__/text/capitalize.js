@@ -16,17 +16,17 @@ console.log = () => {}
 describe('capitalize plugin', () => {
 
 	test('capitalizes the first letter of a string', () => {
-		const input = "[capitalize testString]"
+		const input = "[capitalize: testString]"
 		expect(textSynth.merge(input, payload)).toBe('This is a test')
 	})
 
 	test('returns an empty string when provided with an empty string', () => {
-		const input = "[capitalize emptyString]"
+		const input = "[capitalize: emptyString]"
 		expect(textSynth.merge(input, payload)).toBe('')
 	})
 
 	test('returns the original content if it is not a string', () => {
-		const input = "[capitalize nonString]"
+		const input = "[capitalize: nonString]"
 		expect(textSynth.merge(input, payload)).toBe('12345')
 	})
 	
