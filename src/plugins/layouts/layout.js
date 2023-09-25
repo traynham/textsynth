@@ -53,6 +53,8 @@ export default {
 		// LOAD THE LAYOUT CONTENT
 		let layoutContent = this.loadLayout(payload, params)
 		
+		layoutContent = textMerger.process(layoutContent, payload)
+		
 		// CREATE A STACK TO HANDLE NESTED LAYOUT RENDERING
 		// INITIALIZE IT IF IT DOESN'T EXIST YET
 		payload._layoutStack = payload._layoutStack || []
