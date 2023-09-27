@@ -36,13 +36,18 @@ export default {
 
 	processor(req) {
 		
-		if(req.cargo.assignment.length == 0){
+		if(!Object.keys(req.cargo.assignment).length){
 			return 'ERROR: "var" tag requires a valid asignment parameter.'
 		}
 		
-		req.cargo.assignment.forEach(({key, value}) => {
-			req.payload[key] = value
-		})
+		if(!req.payload._variables) {
+			req.payload._variables = {}
+		}
+		
+		for (const key in req.cargo.assignment) {
+			req.payload[key] = req.cargo.assignment[key]
+			req.payload._variables[key] = req.cargo.assignment[key] // NOT CURRENTLY USED. RESERVED FOR FUTURE USE.
+		}
 		
 		return ''
 		
