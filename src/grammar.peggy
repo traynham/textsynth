@@ -32,7 +32,8 @@
 		content?.forEach( param => {
 			if(param.type == 'attribute'){
 				param.value = _getValueFromPath(param.value, payload) || param.value
-				cargo.assignment.push(param)
+				cargo.assignment[param.key] = param.value
+				cargo.attributes[param.key] = param.value
 			}
 			if(param.type == 'using'){ cargo.using = param}
 		})
@@ -77,7 +78,8 @@
 	function processCargo(params) {
 		
 		let cargo = {
-			assignment: [],
+			//assignment: [],
+			assignment: {},
 			attributes: {},
 			classes: [],
 			condition: null,
