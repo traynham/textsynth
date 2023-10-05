@@ -52,16 +52,24 @@ export default {
 	// Processor logic
 	processor(request) {
 		
+		let { cargo } = request
+		
 		let conditionIsTrue
 		
+		if(request.cargo.condition == null && cargo.values.length){
+			conditionIsTrue = cargo.values.every( item => Boolean(item) )
+		} 
+		
 		// USE PARAMS
-		if(request.cargo.condition == null){
-			conditionIsTrue = request.params.every( item => Boolean(item) )
-			
+		// else if(request.cargo.condition == null && cargo.params.length){
+		// 	conditionIsTrue = request.params.every( item => Boolean(item) )	
+		// } 
+		
 		// USE CARGO.CONDITION
-		} else {
+		else {
 			conditionIsTrue = request.cargo.condition
 		}
+
 		
 		if(conditionIsTrue){
 			return request.textMerger.process(request.content, request.payload)
