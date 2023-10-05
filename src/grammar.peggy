@@ -54,7 +54,7 @@
 		if(typeof path != 'string'){ return path }
 	
 		// Treat path as a string representing a property path. Return path if not resolved.
-		let value = path.split('.').reduce((obj, i) => (obj?.[i]), payload) //|| path
+		let value = path.split('.').reduce((obj, i) => (obj?.[i]), payload)
 
 		if(value == undefined && item.type == 'string'){ value = item.value }
 
@@ -346,17 +346,23 @@ number "Number"
 boolean "Boolean"
 	=	boolean:('true' / 'false') { return {type: 'boolean', value: boolean === 'true' }}
 
+
+escapedChar
+	=	"\\" char:[\[\]] { return '' + char }
+
+charSequence
+    =	chars:(escapedChar / [^\[\]])+ { return chars.join('') }
+
+
 text "Text"
-  	=	chars:([^\[\]]+) {
+    =	chars:charSequence {
 			return { 
-				kind: 'text', 
 				type: 'text', 
-				value: chars.join(''), 
-				content: chars.join(''), 
-				text: chars.join(''),
-				render: chars.join('')
+				value: chars,
+				text: chars,
+				render: chars
 			}
-		}
+    	}
 
 
 _ "whitespace"
