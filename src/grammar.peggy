@@ -18,6 +18,8 @@
 			switch (item.type) {
 				case 'attribute':
 					return item
+				case 'flag':
+					cargo.flags.push(item.value)
 				case 'null':
 					return null
 				case 'undefined':
@@ -38,30 +40,41 @@
 			if(param.type == 'using'){ cargo.using = param}
 		})
 
+		contents = contents.filter(Boolean) // REMOVE FALSY
 		return contents
 
 	}
 
-	function _getValueFromPath(path, payload) {
+	function _getValueFromPath(item, payload) {
+
+		let path = item
+		if(item.value){ path = item.value}
 
 		if(!path){ return ''}
 		if(typeof path != 'string'){ return path }
 	
-		// Default case: treat path as a string representing a property path
-		const value = path.split('.').reduce((obj, i) => (obj?.[i]), payload)
-		
+		// Treat path as a string representing a property path. Return path if not resolved.
+		let value = path.split('.').reduce((obj, i) => (obj?.[i]), payload) //|| path
+
+		if(value == undefined && item.type == 'string'){ value = item.value }
+
 		// Return a shallow copy of the array if it's an array, or return the value directly
 		return Array.isArray(value) ? [...value] : value
 		
 	}
 
+	
+
 	function _evaluateCondition(condition, payload) {
 
 		let { left, operator, right} = condition
 
-		left = _getValueFromPath(left.value, payload) || left.value
-		right = _getValueFromPath(right.value, payload) || right.value
-		
+		const leftValue = _getValueFromPath(left.value, payload)
+		left = (leftValue !== undefined) ? leftValue : left.value
+
+		const rightValue = _getValueFromPath(right.value, payload)
+		right = (rightValue !== undefined) ? rightValue : right.value
+
 		switch (operator) {
 			case '==':  return left == right
 			case '===': return left === right
@@ -78,9 +91,9 @@
 	function processCargo(params) {
 		
 		let cargo = {
-			//assignment: [],
 			assignment: {},
 			attributes: {},
+			flags: [],
 			classes: [],
 			condition: null,
 			extra: [],
@@ -102,13 +115,15 @@
 
 			switch (param.type) {
 				case 'attribute':  cargo.attributes[param.key] = param.value; break;
+				case 'boolean':     cargo.values.push(param.value); break;
 				case 'classes':    cargo.classes.push(param.value); break;
-				case 'condition':  cargo.condition = _evaluateCondition(param, payload); break;
+				case 'condition':  cargo.condition = param.value; break;
 				case 'id':         cargo.id = param.value; break;
-				case 'identifier': cargo.values.push(param.value); break;
+				case 'identifier': cargo.values.push(_getValueFromPath(param, payload)); break;
+				case 'flag':       cargo.flags.push(param.value); break;
 				case 'null':       cargo.params.push(null); break;
 				case 'number':     cargo.values.push(param.value); break;
-				case 'string':   cargo.values.push(`"${param.value}"`); break;
+				case 'string':   cargo.values.push(param.value); break;
 				case 'undefined':  cargo.params.push(undefined); break;
 				case 'using':      cargo.using = param; break;
 				default:           cargo.extra.push(param);
@@ -256,7 +271,7 @@ containerTag "Container Tag"
 				params: params.map( param => {
 					if(param.value == 'true'){ return true}
 					if(param.value == 'false'){ return false}
-					if(param.type == 'identifier'){ return _getValueFromPath(param.value, payload)}
+					if(param.type == 'identifier'){ return _getValueFromPath(param, payload)}
 					return param 
 				}), 
 				content:  content ? content.map(e => e.text).join('') : '', 
@@ -287,15 +302,18 @@ arguments
 delimiter
 	=	_ [, ] _
 
-
 arg
-	=	condition
+	=	logicalAndExpression
+	/	logicalOrExpression
+	/	condition
 	/	attribute
 	/	quotedText
+	/	flag
 	/	classPattern
 	/	idPattern
 	/	usingPattern
 	/	objectField
+	/	boolean
 	/	identifier
 	/	index
 	/	number
@@ -308,7 +326,6 @@ quotedText
 	=	'"' chars:[^"]* '"' { return { type: 'string', value: chars.join('') }; }
 	/	"'" chars:[^']* "'" { return { type: 'string', value: chars.join('') }; }
 
-
 objectField
 	=	obj:identifier "[" field:identifier "]" {
 			return { type: 'objectField', object: obj, field: field };
@@ -318,7 +335,7 @@ identifier
 	=	head:[a-zA-Z_] tail:[a-zA-Z0-9._]* { return { type: 'identifier', value: head + tail.join('') }; }
 	
 merge_identifier
-	=	"[" _ tagName:[a-zA-Z0-9.]* _ "]" { return { type: 'identifier', value: `${tagName.join('')}` }; }
+	=	"[" _ tagName:[a-zA-Z0-9._]* _ "]" { return { type: 'identifier', value: `${tagName.join('')}` }; }
 
 index
 	=	"[" i:[0-9]+ "]" { return { type: 'index', value: parseInt(i.join(''), 10) }; }
@@ -341,6 +358,7 @@ text "Text"
 			}
 		}
 
+
 _ "whitespace"
 	= [ \t\n\r]*
 
@@ -348,23 +366,73 @@ _ "whitespace"
 //   CARGO
 // =========
 
+
 condition "Condition"
+
 	= 	left:operand _ operator:operators _ right:operand {
-			return { type: "condition", left, operator, right };
+			let value = _evaluateCondition({left, operator, right}, payload)
+			return { type: "condition", value: value }
 		}
+
+	/ neg:"!" op:operand _ {
+		op.neg = true
+		if(op.type !== 'boolean'){ op.value = _getValueFromPath(op, payload) }
+		op.value = !op.value
+		op.type = 'condition'
+		return op
+	}
+
+logicalAndExpression "LogicalAndExpression"
+    =	left:(condition / operand ) _ "&&" _ right:(condition / operand) { 
+
+			if(left.type !== 'condition'){
+				left.value = Boolean(_getValueFromPath(left, payload))
+			}
+			if(right.type !== 'condition'){
+				right.value = Boolean(_getValueFromPath(right, payload))
+			}
+
+			let result = (left.value && right.value)
+
+			return { type: "condition", value: result }
+
+		}
+
+logicalOrExpression "LogicalOrExpression"
+    = 	left:(condition / operand ) _ "||" _ right:(condition / operand ) { 
+
+			if(left.type !== 'condition'){
+				left.value = Boolean(_getValueFromPath(left, payload))
+			}
+			if(right.type !== 'condition'){
+				right.value = Boolean(_getValueFromPath(right, payload))
+			}
+
+			let result = (left.value || right.value)
+
+			return { type: "condition", value: result }
+
+		}
+
 
 operators "Operators"
 	= 	'===' / '==' / '!==' / '!=' / '<=' / '>=' / '<' / '>'
+
 
 operand "Operand"
 	=	quotedText
 	/	boolean
 	/	number
-	/	name:$([a-zA-Z0-9'.]+) {return { type: "name", value: name}}
+	/	name
+
+
+name "Name"
+	=	name:$([a-zA-Z0-9'.]+) {return { type: "name", value: name}}
+
 
 assignment "Assignment"
 	= 	name:operand _ "=" _ value:operand {
-			return { type: "assignment", name, value };
+			return { type: "assignment", name, value }
 		}
 
 nullLiteral
@@ -386,7 +454,7 @@ usingPattern "Using"
 // ATTRIBUTES
 attribute
 	= 	key:attrKey _ "=" _ value:(quotedText / text) {
-			return { type: "attribute", key, value: value.value };
+			return { type: "attribute", key, value: value.value }
 		}
 
 attrKey
@@ -403,6 +471,12 @@ classPattern
 idPattern
 	=	"#" idName:attrKey {
 			return { type: "id", value: idName }
+		}
+
+// FLAG
+flag
+	=	"-" flag:attrKey {
+			return { type: "flag", value: flag }
 		}
 
 // OTHER
