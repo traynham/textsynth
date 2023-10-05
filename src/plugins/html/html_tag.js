@@ -80,6 +80,7 @@ export default {
 	
 	processor(req) {
 		
+		let { cargo } = req
 		let tag = this.alias || 'div'
 		let attr = {...req.cargo?.attributes}
 		
@@ -90,25 +91,28 @@ export default {
 		}
 		
 		// CLASSES
-		if(req.cargo?.classes.length){ 
-			attr.class = req.cargo.classes.sort().join(' ')
+		if(cargo.classes.length){ 
+			attr.class = cargo.classes.sort().join(' ')
 		}
 		
 		// ID
-		if(req.cargo?.id){ attr.id = req.cargo?.id }
+		if(cargo.id){ attr.id = cargo?.id }
+		
+		// INSERT FLAGS INTO VALUES	
+		cargo.flags.forEach(flag => { cargo.values.push(flag) })
 		
 		// VALUES - DEAL WITH QUOTES AND SPACES.
-		if(req.cargo?.values){			
-			req.cargo.values = req.cargo.values.map(value => {
-				if(value.includes(' ')){ return value }
-				return value.replace(/['"]/g, '')
+		if(cargo.values){
+			cargo.values = cargo.values.map(value => {
+				if(value.includes(' ')){ return `"${value}"` }
+				return value
 			})
 		}
 		
 		const attributeString = [
 			'',
 			...Object.entries(attr).map(([key, value]) => `${key}="${value}"`),
-			...req.cargo.values //|| []
+			...cargo.values //|| []
 		].join(' ')
 		
 		return `<${tag}${attributeString}>${req.content}</${tag}>`
