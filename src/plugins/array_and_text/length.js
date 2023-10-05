@@ -37,6 +37,7 @@ export default {
 
 	// Processor logic
 	processor(req) {
+		if(!req.content){ return 0 }
 		return req.content.length;
 	}
 }
