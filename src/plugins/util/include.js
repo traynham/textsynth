@@ -25,7 +25,7 @@ export default {
 	processor(req) {
 		
 		// Check if content (the file to be included) is provided. If not, return an error message.
-		if (req.content.length === 0) {
+		if (!req.content) {
 			return 'ERROR: No file specified for include tag'
 		}
 		
