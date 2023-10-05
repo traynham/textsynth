@@ -34,6 +34,12 @@ export default {
 	category: 'Encoding',
 	kind: 'single',
 	processor(req) {
-		return req.textMerger.runPlugin('escape_delimiters', { content: JSON.stringify(req.content) })
+		
+		if(req.cargo.flags.includes('pretty')){
+			return JSON.stringify(req.content, null, 2)
+		}
+		
+		return JSON.stringify(req.content)
+		
 	}
 }
