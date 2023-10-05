@@ -38,6 +38,7 @@ export default {
 	// Processor logic
 	processor(req) {
 		let {content} = req
+		if(!content){ return ''}
 		return Array.isArray(content) ? content.reverse() : content.split('').reverse().join('')	
 	}
 }
