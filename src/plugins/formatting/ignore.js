@@ -30,10 +30,11 @@ export default {
 		},
 	],
 
-	processor(req) {
-		let { esc, raw } = req.textMerger.delimiters
-		let out = req.content?.split(raw.start).join(esc.start).split(raw.end).join(esc.end)
-		return out
-	}
+	// FUNCTIONALITY IS IN GRAMMAR.
+	// processor(req) {
+	// 	let { esc, raw } = req.textMerger.delimiters
+	// 	let out = req.content?.split(raw.start).join(esc.start).split(raw.end).join(esc.end)
+	// 	return out
+	// }
 	
 }
