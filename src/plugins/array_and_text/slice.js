@@ -51,6 +51,7 @@ export default {
 
 	// Processor logic
 	processor(req) {
+		if(!req.content){ return '' }
 		let [ start, end ] = req.params
 		return req.content.slice(parseInt(start), parseInt(end))
 	}
