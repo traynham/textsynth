@@ -4,7 +4,7 @@ import TextSynth from '../index.js'
 const textSynth = await TextSynth()
 
 // Turning off console.
-console.log = () => {}
+//console.log = () => {}
 
 describe('div plugin', () => {
 
@@ -45,8 +45,8 @@ describe('div plugin', () => {
 	})
 	
 	test('generates div tag with quoted values', () => {
-		const input = `[div: 'required', selected, "Some bad value"]This is the div content[/div]`
-		const expectedOutput = '<div required selected "Some bad value">This is the div content</div>'
+		const input = `[div: 'required', -selected, "Some bad value"]This is the div content[/div]`
+		const expectedOutput = '<div required "Some bad value" selected>This is the div content</div>'
 		expect(textSynth.merge(input, {})).toBe(expectedOutput)
 	})
 	
