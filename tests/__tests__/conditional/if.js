@@ -41,9 +41,9 @@ describe('If plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('Hello Admin')
 	})
 	
-	test('a string of "false" should be cast as false.', () => {
+	test('a string of "false" should be true because it is a string.', () => {
 		const input = '[if: "false"]Hello Admin[/if]'
-		expect(textSynth.merge(input, payload)).toBe('')
+		expect(textSynth.merge(input, payload)).toBe('Hello Admin')
 	})
 
 	test('should allow multiple params', () => {
@@ -111,4 +111,52 @@ describe('If plugin conditionals', () => {
 		expect(textSynth.merge(input, payload)).toBe('Smaller')
 	})
 	
+})
+
+describe('If plugin enhanced conditionals', () => {
+
+	test('should evaluate basic true condition', () => {
+		const input = '[if: true]True[/if]'
+		expect(textSynth.merge(input, payload)).toBe('True')
+	})
+
+	test('should evaluate negation', () => {
+		const input = '[if: !true]Not True[/if]'
+		expect(textSynth.merge(input, payload)).toBe('')
+	})
+
+	test('should evaluate and operation with true conditions', () => {
+		const input = '[if: true && true]True[/if]'
+		expect(textSynth.merge(input, payload)).toBe('True')
+	})
+
+	test('should evaluate and operation with mixed conditions', () => {
+		const input = '[if: true && !false]True[/if]'
+		expect(textSynth.merge(input, payload)).toBe('True')
+	})
+
+	test('should evaluate complex condition with equality checks', () => {
+		const input = '[if: true == true && true !== false]True[/if]'
+		expect(textSynth.merge(input, payload)).toBe('True')
+	})
+
+	test('should evaluate or operation', () => {
+		const input = '[if: true || false]True[/if]'
+		expect(textSynth.merge(input, payload)).toBe('True')
+	})
+	
+	test('should handle precedence in complex expressions', () => {
+		const input = '[if: true || false]True[/if]'
+		expect(textSynth.merge(input, payload)).toBe('True')
+	})
+	
+	test('should evaluate expressions with literals and variables', () => {
+		const input = '[if: user.isAdmin && true]Hello Admin[/if]'
+		expect(textSynth.merge(input, payload)).toBe('Hello Admin')
+	})
+
+	test('should evaluate expressions with negation and variables', () => {
+		const input = '[if: !user.isMod && true]Not a Mod[/if]'
+		expect(textSynth.merge(input, payload)).toBe('Not a Mod')
+	})
 })
