@@ -38,7 +38,7 @@ export default {
 		
 		let content = req.content
 		
-		if(!content.length){ return '' }
+		if(!req.content){ return '' }
 		
 		const index = Math.floor(Math.random() * content.length)
 		return content[index]
