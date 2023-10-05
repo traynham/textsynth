@@ -23,7 +23,13 @@ describe('stringify plugin', () => {
 	test('converts a JavaScript value to a JSON string', () => {
 		const input = "[stringify: data]"
 		const expectedOutput = JSON.stringify(payload.data)
-		expect(textSynth.merge(input, payload)).toBe(expectedOutput.replaceAll('[', '\\[').replaceAll(']', '\\]'))
+		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
+	})
+	
+	test('converts a JavaScript value to a pretty JSON string', () => {
+		const input = "[stringify: data, -pretty]"
+		const expectedOutput = JSON.stringify(payload.data, null, 2)
+		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 
 	test('returns an empty string when the content is null', () => {
