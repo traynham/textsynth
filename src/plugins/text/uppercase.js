@@ -37,6 +37,7 @@ export default {
 	],
 
 	processor(req) {
+		if(!req.content) { return ''}
 		return req.content.toUpperCase()
 	}
 
