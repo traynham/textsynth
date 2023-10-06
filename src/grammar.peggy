@@ -151,10 +151,19 @@ expression "Expression"
 merge "Merge Tag"
 	= 	tagName:merge_identifier &{ return !isContainer(tagName.value) }
 		{
+
+			if(tagName.type == 'identifier') {
+				return {
+					render: _getValueFromPath(tagName.value, payload),
+					text: text()
+				}
+			}
+
 			return {
-				render: _getValueFromPath(tagName.value, payload),
+				render: tagName.value.value, // FIX THIS!!!
 				text: text()
-			};
+			}
+
 		}
 
 single_signatures
@@ -323,19 +332,24 @@ arg
 	
 // SINGLE/DOUBLE QUOTED
 quotedText
-	=	'"' chars:[^"]* '"' { return { type: 'string', value: chars.join('') }; }
-	/	"'" chars:[^']* "'" { return { type: 'string', value: chars.join('') }; }
+	=	'"' chars:[^"]* '"' { return { type: 'string', value: chars.join('') } }
+	/	"'" chars:[^']* "'" { return { type: 'string', value: chars.join('') } }
 
 objectField
-	=	obj:identifier "[" field:identifier "]" {
-			return { type: 'objectField', object: obj, field: field };
+	=	obj:identifier "[" field:(identifier / quotedText / number) "]" {
+			let path = _getValueFromPath(obj, payload)
+			let val = _getValueFromPath(field, payload)
+			return { type: 'objectField', value: path[val]}
 		}
 
 identifier
-	=	head:[a-zA-Z_] tail:[a-zA-Z0-9._]* { return { type: 'identifier', value: head + tail.join('') }; }
+	=	head:[a-zA-Z_] tail:[a-zA-Z0-9._]* { return { type: 'identifier', value: head + tail.join('') } }
 	
+
 merge_identifier
-	=	"[" _ tagName:[a-zA-Z0-9._]* _ "]" { return { type: 'identifier', value: `${tagName.join('')}` }; }
+	=	"[" _ tagName:[a-zA-Z0-9._]* _ "]" { return { type: 'identifier', value: `${tagName.join('')}` } }
+	/	"[" _ tagName:objectField _ "]" { return { type: 'objectField', value: tagName } }
+
 
 index
 	=	"[" i:[0-9]+ "]" { return { type: 'index', value: parseInt(i.join(''), 10) }; }
