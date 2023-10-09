@@ -362,7 +362,7 @@ boolean "Boolean"
 
 
 escapedChar
-	=	"\\" char:[\[\]] { return '' + char }
+	=	"\\" char:[\[\]] { return '\\' + char }
 
 charSequence
     =	chars:(escapedChar / [^\[\]])+ { return chars.join('') }
