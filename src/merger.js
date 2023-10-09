@@ -282,7 +282,13 @@ class TextMerger {
 		}
 		
 		// PROCESS
-		return this.process(template, payload)
+		let processed = this.process(template, payload)
+		
+		let { raw, esc } = this.delimiters
+		
+		return processed
+			.split(esc.start).join(raw.start)
+			.split(esc.end).join(raw.end)
 		
 	}
 	
