@@ -6,7 +6,8 @@ const textSynth = await TextSynth()
 // Test payload
 const payload = {
 	lowercaseString: 'this is a test',
-	mixedcaseString: 'This IS a Test'
+	mixedcaseString: 'This IS a Test',
+	emptyString: '',
 }
 
 // Turning off console.
@@ -27,6 +28,11 @@ describe('uppercase plugin', () => {
 	test('returns the same string when already in uppercase', () => {
 		const input = "[uppercase: 'HELLO']"
 		expect(textSynth.merge(input, payload)).toBe('HELLO')
+	})
+	
+	test('returns an empty string when provided with an empty string', () => {
+		const input = "[uppercase: emptyString]"
+		expect(textSynth.merge(input, payload)).toBe('')
 	})
 	
 })
