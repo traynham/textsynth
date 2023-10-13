@@ -209,6 +209,13 @@ single_signatures
 			return { tagName, type: 'single', params: [], content, signature: 'Single Tag' }
 		}
 
+	// SINGLE TAG WITH NO ARGS
+	/	"[" tagName:identifier &{ return isSingle(tagName.value) } _ "]"
+		{
+			debug('SINGLE TAG WITH NO ARGS', tagName)
+			return { tagName, type: 'single', params: [], content: [], signature: 'Single Tag without args' }
+		}
+
 	// SINGLE TAG WITH PARAMS
 	/	"[" tagName:identifier &{ return isSingle(tagName.value) } params:parameters ":" _ content:(objectField / arguments) "]"
 		{
