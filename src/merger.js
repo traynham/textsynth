@@ -191,6 +191,7 @@ class TextMerger {
 			parsed = this.parser.parse(
 				template,
 				{
+					DEBUG: false,
 					payload, 
 					tagsByKind: this.tagsByKind, 
 					tags: this.tags, 
