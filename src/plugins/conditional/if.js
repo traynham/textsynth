@@ -61,9 +61,10 @@ export default {
 		} 
 		
 		// USE PARAMS
-		// else if(request.cargo.condition == null && cargo.params.length){
-		// 	conditionIsTrue = request.params.every( item => Boolean(item) )	
-		// } 
+		else if(request.cargo.condition == null && cargo.params.length){
+			//conditionIsTrue = request.params.every( item => Boolean(item) )	
+			conditionIsTrue = cargo.params.every( item => Boolean(item) )	
+		} 
 		
 		// USE CARGO.CONDITION
 		else {
