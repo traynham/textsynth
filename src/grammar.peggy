@@ -1,6 +1,5 @@
 {
-	var { payload, tags, textMerger } = options
-	var DEBUG = true
+	var { DEBUG, payload, tags, textMerger } = options
 
 	function isSingle(tag) {
 		return options.tagsByKind.single.includes(tag);
@@ -57,18 +56,10 @@
 
 		
 		if (item.type === 'segments') {
-			
 			debug('GET VALUE FROM PATH › SEGMENTS', item)
-
-			let current = payload
-
-			for (let segment of item.segments) {
-				current = current[segment.value]
-			}
-
-			return current
+			item = item.segments.map(segment => segment.value).join('.')
 		}
-
+		
 		let path = item;
 		if (item.value) { path = item.value }
 
@@ -305,6 +296,7 @@ container_signatures "Container Signatures"
 		"[/" close:identifier "]"
 		{
 			debug('TRIGGER :: CONTAINER WITH ARGS', tagName)
+			debug('TRIGGER :: CONTAINER WITH ARGS › PARAMS', params)
 			return { tagName, close, params, content }
 		}
 
