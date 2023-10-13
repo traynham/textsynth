@@ -21,7 +21,7 @@ describe('choose plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('Hello Admin!')
 	})
 	
-	test('returns second content when condition is false quoted string', () => {
+	test('returns second content when condition is false quoted string 1', () => {
 		const input = `[choose('false'): "Hello Admin!", "Hello User!", "Hello"]`
 		expect(textSynth.merge(input, payload)).toBe('Hello User!')
 	})
@@ -37,7 +37,7 @@ describe('choose plugin', () => {
 	// 	expect(textSynth.merge(input, payload)).toBe('Hello Admin!')
 	// })
 	
-	test('returns second content when condition is false string', () => {
+	test('returns second content when condition is false string 2', () => {
 		const input = `[choose(false): "Hello Admin!", "Hello User!", "Hello"]`
 		expect(textSynth.merge(input, payload)).toBe('Hello User!')
 	})
@@ -47,7 +47,7 @@ describe('choose plugin', () => {
 		expect(textSynth.merge(input, payload)).toBe('Hello Admin!')
 	})
 	
-	test('returns second content when condition is false', () => {
+	test('returns second content when condition is false 3', () => {
 		const input = '[choose(isSubscriber): "Hello Admin!", "Hello User!", "Hello"]'
 		expect(textSynth.merge(input, payload)).toBe('Hello User!')
 	})
