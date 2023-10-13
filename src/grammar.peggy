@@ -1,5 +1,6 @@
 {
 	var { payload, tags, textMerger } = options
+	var DEBUG = true
 
 	function isSingle(tag) {
 		return options.tagsByKind.single.includes(tag);
@@ -9,11 +10,15 @@
 		return options.tagsByKind.container.includes(tag);
 	}
 
+	function debug(title, message){
+		if(!DEBUG){ return ''}
+		console.log(`DEBUG › ${title} ›`, message)
+	}
+
 	function processContent(content, cargo) {
 
 		let contents = Array.isArray(content) ? content : [content];
 		let out = []
-
 		contents = contents.map(item => {
 			switch (item.type) {
 				case 'attribute':
@@ -31,40 +36,54 @@
 			}
 		})
 
-		content?.forEach( param => {
-			if(param.type == 'attribute'){
-				param.value = _getValueFromPath(param.value, payload) || param.value
-				cargo.assignment[param.key] = param.value
-				cargo.attributes[param.key] = param.value
-			}
-			if(param.type == 'using'){ cargo.using = param}
-		})
+		if(Array.isArray(content)){
+
+			content?.forEach( param => {
+					if(param.type == 'attribute'){
+						param.value = _getValueFromPath(param.value, payload) || param.value
+					cargo.assignment[param.key] = param.value
+					cargo.attributes[param.key] = param.value
+				}
+				if(param.type == 'using'){ cargo.using = param}
+			})
+		}
 
 		contents = contents.filter(Boolean) // REMOVE FALSY
 		return contents
 
 	}
-
+	
 	function _getValueFromPath(item, payload) {
 
-		let path = item
-		if(item.value){ path = item.value}
+		
+		if (item.type === 'segments') {
+			
+			debug('GET VALUE FROM PATH › SEGMENTS', item)
 
-		if(!path){ return ''}
-		if(typeof path != 'string'){ return path }
-	
+			let current = payload
+
+			for (let segment of item.segments) {
+				current = current[segment.value]
+			}
+
+			return current
+		}
+
+		let path = item;
+		if (item.value) { path = item.value }
+
+		if (!path) { return '' }
+		if (typeof path !== 'string') { return path }
+
 		// Treat path as a string representing a property path. Return path if not resolved.
 		let value = path.split('.').reduce((obj, i) => (obj?.[i]), payload)
 
-		if(value == undefined && item.type == 'string'){ value = item.value }
+		if (value === undefined && item.type === 'string') { value = item.value }
 
 		// Return a shallow copy of the array if it's an array, or return the value directly
-		return Array.isArray(value) ? [...value] : value
-		
+		return Array.isArray(value) ? [...value] : value;
 	}
-
 	
-
 	function _evaluateCondition(condition, payload) {
 
 		let { left, operator, right} = condition
@@ -114,19 +133,20 @@
 			if(!param){ return undefined }
 
 			switch (param.type) {
-				case 'attribute':  cargo.attributes[param.key] = param.value; break;
+				case 'attribute':   cargo.attributes[param.key] = param.value; break;
 				case 'boolean':     cargo.values.push(param.value); break;
-				case 'classes':    cargo.classes.push(param.value); break;
-				case 'condition':  cargo.condition = param.value; break;
-				case 'id':         cargo.id = param.value; break;
-				case 'identifier': cargo.values.push(_getValueFromPath(param, payload)); break;
-				case 'flag':       cargo.flags.push(param.value); break;
-				case 'null':       cargo.params.push(null); break;
-				case 'number':     cargo.values.push(param.value); break;
-				case 'string':   cargo.values.push(param.value); break;
-				case 'undefined':  cargo.params.push(undefined); break;
-				case 'using':      cargo.using = param; break;
-				default:           cargo.extra.push(param);
+				case 'classes':     cargo.classes.push(param.value); break;
+				case 'condition':   cargo.condition = param.value; break;
+				case 'id':          cargo.id = param.value; break;
+				case 'identifier':  cargo.values.push(_getValueFromPath(param, payload)); break;
+				case 'flag':        cargo.flags.push(param.value); break;
+				case 'objectField': cargo.params.push(param.value); break;
+				case 'null':        cargo.params.push(null); break;
+				case 'number':      cargo.values.push(param.value); break;
+				case 'string':      cargo.values.push(param.value); break;
+				case 'undefined':   cargo.params.push(undefined); break;
+				case 'using':       cargo.using = param; break;
+				default:            cargo.extra.push(param);
 			}
 		})
 
@@ -142,19 +162,29 @@ start "Start"
 
 expression "Expression"
 	=	@( text )
-	/	@( merge )
 	/	@( tag )
 	/	@( mal )
 	/	@( containerTag )
+	/	@( merge )
 
 // MERGE
 merge "Merge Tag"
 	= 	tagName:merge_identifier &{ return !isContainer(tagName.value) }
 		{
+			
+			debug('TRIGGER:: MERGE', tagName)
 
 			if(tagName.type == 'identifier') {
 				return {
 					render: _getValueFromPath(tagName.value, payload),
+					text: text()
+				}
+			}
+
+			// MAY NOT BE NEEDED IF NEXT SECTION IS FIXED.
+			if(tagName.type == 'objectField') {
+				return {
+					render: tagName.value,
 					text: text()
 				}
 			}
@@ -166,15 +196,34 @@ merge "Merge Tag"
 
 		}
 
+// MOVE TO SIGNATURE IDEA??
+merge_identifier "Merge Identifier"
+	=	"[" _ tagName:[a-zA-Z0-9._]* _ "]" {
+			debug('TRIGGER :: MERGE IDENTIFIER 1', tagName.join(''))
+			return { type: 'identifier', value: `${tagName.join('')}` } 
+		}
+	
+	/	"[" _ tagName:objectField _ "]" {
+			debug('MERGE IDENTIFIER 2', tagName)
+			return tagName
+		}
+
+
 single_signatures
 
 	// SINGLE TAG
-	=	"[" tagName:identifier &{ return isSingle(tagName.value) } ":" _ content:arguments _ "]"
-		{ return { tagName, type: 'single', params: [], content, signature: 'Single Tag' } }
+	=	"[" tagName:identifier &{ return isSingle(tagName.value) } ":" _ content:(arguments) _ "]"
+		{
+			debug('SINGLE TAG', tagName)
+			return { tagName, type: 'single', params: [], content, signature: 'Single Tag' }
+		}
 
 	// SINGLE TAG WITH PARAMS
-	/	"[" tagName:identifier &{ return isSingle(tagName.value) } params:parameters ":" _ content:arguments "]"
-		{ return { tagName, type: 'single-with-params', params, content, signature: 'Single Tag With Params' } }
+	/	"[" tagName:identifier &{ return isSingle(tagName.value) } params:parameters ":" _ content:(objectField / arguments) "]"
+		{
+			debug('SINGLE TAG WITH PARAMS', tagName)
+			return { tagName, type: 'single-with-params', params, content, signature: 'Single Tag With Params' }
+		}
 
 
 // SINGLES
@@ -182,6 +231,8 @@ tag "Single Tag"
 
 	=	sig:single_signatures
 		{
+			
+			debug('TRIGGER :: SINGLE PROC', sig)
 			
 			let {tagName, type, params, content} = sig
 			
@@ -220,6 +271,7 @@ mal "Malformed Matches"
 
 	// ERROR IF NO CONTENT.
 	=	"[" tagName:identifier &{ return isSingle(tagName.value) } ":" "]" {
+			debug('TRIGGER :: MALFORMED MATCH', tagName)
 			return {render: `ERROR: "${tagName.value}" tag expected content.`}
 		}
 
@@ -231,6 +283,7 @@ container_signatures "Container Signatures"
 			content:(!'[/ignore]' .)*
 		"[/ignore]"
 		{
+			debug('TRIGGER :: IGNORE CONTENT')
 			return {
 				tagName: {value: 'ignore'},
 				close: {value: 'ignore'},
@@ -241,20 +294,29 @@ container_signatures "Container Signatures"
 
 	// SIGNATURE › CONTAINER WITHOUT CONTENT
 	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ "]" "[/" close:identifier "]"
-		{ return { tagName, close, params, content: [] } }
+		{
+			debug('TRIGGER :: CONTAINER WITHOUT CONTENT', tagName)
+			return { tagName, close, params, content: [] }
+		}
 
 	// SIGNATURE › CONTAINER WITH ARGS
 	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ "]"
 			content:expression+
 		"[/" close:identifier "]"
-		{ return { tagName, close, params, content } }
+		{
+			debug('TRIGGER :: CONTAINER WITH ARGS', tagName)
+			return { tagName, close, params, content }
+		}
 
 
 	// SIGNATURE › CONTAINER WITHOUT ARGS
 	/ 	"[" tagName:identifier &{ return isContainer(tagName.value) }  _ "]"
 			content:(expression* / _)
 		"[/" close:identifier "]"
-		{ return { tagName, close, params: [], content } }
+		{
+			debug('TRIGGER :: CONTAINER WITHOUT ARGS', tagName)
+			return { tagName, close, params: [], content }
+		}
 		
 
 // CONTAINER
@@ -263,6 +325,8 @@ containerTag "Container Tag"
 	=	sig:container_signatures
 		{
 			
+			debug('TRIGGER :: CONTAINER PROC', sig)
+
 			let {tagName, close, params, content} = sig
 
 			if(tagName.value == 'ignore'){
@@ -281,6 +345,7 @@ containerTag "Container Tag"
 					if(param.value == 'true'){ return true}
 					if(param.value == 'false'){ return false}
 					if(param.type == 'identifier'){ return _getValueFromPath(param, payload)}
+					if(param.type == 'objectField'){ return param.value}
 					return param 
 				}), 
 				content:  content ? content.map(e => e.text).join('') : '', 
@@ -321,8 +386,8 @@ arg
 	/	classPattern
 	/	idPattern
 	/	usingPattern
-	/	objectField
 	/	boolean
+	/	objectField
 	/	identifier
 	/	index
 	/	number
@@ -335,21 +400,53 @@ quotedText
 	=	'"' chars:[^"]* '"' { return { type: 'string', value: chars.join('') } }
 	/	"'" chars:[^']* "'" { return { type: 'string', value: chars.join('') } }
 
+
+pathSegment
+    =	"." segment:identifier {
+			let value = segment.value.split('.').map(val => {
+				return {type: 'dot', value: val}
+			})
+			return value
+		}
+	/	segment:(identifier / quotedText / number) {
+			let value = _getValueFromPath(segment.value, payload) || segment.value
+			return [{ type: "bracket", value }];
+		}
+	/	"[" segment:(identifier / quotedText / number) "]" {
+			let value = _getValueFromPath(segment.value, payload) || segment.value
+			return [{ type: "bracket", value }];
+		}
+
+path
+	= segments:pathSegment* {
+		return { type: "segments", segments: segments.flat() }
+    }
+
+// RENAME TO PROPERTYPATH?
 objectField
-	=	obj:identifier "[" field:(identifier / quotedText / number) "]" {
+
+	=	obj:identifier path:path {
+
+		let root = obj.value.split('.').map(item => {
+			return {type: 'identifier', value: item}
+		})
+
+		let segments = { type: "segments", segments: [...root, ...path.segments] };
+
+		return {type: 'objectField', value:_getValueFromPath(segments, payload)}
+
+    }
+
+	/	obj:identifier "[" field:(identifier / quotedText / number) "]" {
 			let path = _getValueFromPath(obj, payload)
 			let val = _getValueFromPath(field, payload)
 			return { type: 'objectField', value: path[val]}
 		}
 
+
+
 identifier
 	=	head:[a-zA-Z_] tail:[a-zA-Z0-9._]* { return { type: 'identifier', value: head + tail.join('') } }
-	
-
-merge_identifier
-	=	"[" _ tagName:[a-zA-Z0-9._]* _ "]" { return { type: 'identifier', value: `${tagName.join('')}` } }
-	/	"[" _ tagName:objectField _ "]" { return { type: 'objectField', value: tagName } }
-
 
 index
 	=	"[" i:[0-9]+ "]" { return { type: 'index', value: parseInt(i.join(''), 10) }; }
@@ -396,7 +493,7 @@ condition "Condition"
 
 	/ neg:"!" op:operand _ {
 		op.neg = true
-		if(op.type !== 'boolean'){ op.value = _getValueFromPath(op, payload) }
+//		if(op.type !== 'boolean'){ op.value = _getValueFromPath(op.value, payload) }
 		op.value = !op.value
 		op.type = 'condition'
 		return op
@@ -405,10 +502,11 @@ condition "Condition"
 logicalAndExpression "LogicalAndExpression"
     =	left:(condition / operand ) _ "&&" _ right:(condition / operand) { 
 
-			if(left.type !== 'condition'){
+			// NOTE: NAME IS NOT COVERED. SHOULD IT BE?
+			if(left.type == 'quotedText'){
 				left.value = Boolean(_getValueFromPath(left, payload))
 			}
-			if(right.type !== 'condition'){
+			if(right.type == 'quotedText'){
 				right.value = Boolean(_getValueFromPath(right, payload))
 			}
 
@@ -443,6 +541,7 @@ operand "Operand"
 	=	quotedText
 	/	boolean
 	/	number
+	/	objectField
 	/	name
 
 
@@ -450,10 +549,10 @@ name "Name"
 	=	name:$([a-zA-Z0-9'.]+) {return { type: "name", value: name}}
 
 
-assignment "Assignment"
-	= 	name:operand _ "=" _ value:operand {
-			return { type: "assignment", name, value }
-		}
+// assignment "Assignment"
+// 	= 	name:operand _ "=" _ value:operand {
+// 			return { type: "assignment", name, value }
+// 		}
 
 nullLiteral
     =	"null" { return { type: 'null', value: null } }
@@ -463,7 +562,7 @@ undefinedLiteral
 
 // USING
 usingPattern "Using"
-	=	name:operand _ "using" _ value:operand {
+	=	name:(quotedText / name) _ "using" _ value:operand {
 			return {
 				type: "using", 
 				name: name.value,
@@ -472,8 +571,9 @@ usingPattern "Using"
 		}
 
 // ATTRIBUTES
+// USE SAME AS NAME IN USING FOR KEY???????????
 attribute
-	= 	key:attrKey _ "=" _ value:(quotedText / text) {
+	= 	key:attrKey _ "=" _ value:(objectField / quotedText / text) {
 			return { type: "attribute", key, value: value.value }
 		}
 
