@@ -21,7 +21,8 @@
 		contents = contents.map(item => {
 			switch (item.type) {
 				case 'attribute':
-					return item
+					return ''
+				//	return item
 				case 'flag':
 					cargo.flags.push(item.value)
 				case 'null':
@@ -290,28 +291,41 @@ container_signatures "Container Signatures"
 			}
 		}
 
-	// SIGNATURE › CONTAINER WITHOUT CONTENT
-	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ "]" "[/" close:identifier "]"
+	// SIGNATURE › CONTAINER › WITHOUT CONTENT
+	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ "]" _ "[/" close:identifier "]"
 		{
 			debug('TRIGGER :: CONTAINER WITHOUT CONTENT', tagName)
 			return { tagName, close, params, content: [] }
 		}
 
-	// SIGNATURE › CONTAINER WITH ARGS
-	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ "]"
-			content:expression+
-		"[/" close:identifier "]"
+	// SIGNATURE › CONTAINER › WITH ARGS
+	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ "]" nl
+			content:expression*
+		"[/" close:identifier "]" nl
 		{
 			debug('TRIGGER :: CONTAINER WITH ARGS', tagName)
 			debug('TRIGGER :: CONTAINER WITH ARGS › PARAMS', params)
 			return { tagName, close, params, content }
 		}
 
+	// SIGNATURE › CONTAINER SELF CLOSING › WITH ARGS
+	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ [/.] _ "]"
+		{
+			debug('TRIGGER :: CONTAINER › SELF CLOSING › WITH ARGS', tagName)
+			return { 
+				tagName, 
+				close: {type: 'identifier', value: tagName.value}, 
+				params,
+				content: [{type: 'string', value: ''}]
+			}
 
-	// SIGNATURE › CONTAINER WITHOUT ARGS
-	/ 	"[" tagName:identifier &{ return isContainer(tagName.value) }  _ "]"
+		}
+
+
+	// SIGNATURE › CONTAINER › WITHOUT ARGS
+	/ 	"[" tagName:identifier &{ return isContainer(tagName.value) }  _ "]" nl
 			content:(expression* / _)
-		"[/" close:identifier "]"
+		"[/" close:identifier "]" nl
 		{
 			debug('TRIGGER :: CONTAINER WITHOUT ARGS', tagName)
 			return { tagName, close, params: [], content }
@@ -475,8 +489,11 @@ text "Text"
     	}
 
 
-_ "whitespace"
+_ "Whitespace"
 	= [ \t\n\r]*
+
+nl "New Line"
+	= [\t\n\r]?
 
 // =========
 //   CARGO
