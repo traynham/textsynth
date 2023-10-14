@@ -32,11 +32,52 @@ export default {
 			note: "Use the log plugin to log the value of an object's property.",
 			output: 'Logs the value of property.path to the console',
 		},
+		{
+			payload: {property: {path: 'propertyValue'}},
+			input: "[log: 'THE PATH:', property.path]",
+			note: "Use the log plugin to log the value of an object's property with a grouping.",
+			output: 'Logs the value of property.path to the console',
+		},
+		{
+			payload: {property: {path: 'propertyValue'}, another: 'value'},
+			input: "[log: 'THE PATH:', property.path]",
+			note: "Use the log plugin to log the multiple objects with a grouping.",
+			output: 'Logs the value of property.path to the console',
+		},
+		{
+			payload: {property: {path: 'propertyValue', name: 'Bob'}},
+			input: "[log: 'THE VALUES:', property, -table]",
+			note: "Use the log plugin to log object as a table with a grouping.",
+			output: 'Logs the value of property.path to the console',
+		},
 	],
 
 	processor(req) {
-		console.log(req.content)
+		
+		let group
+		let log = console.log
+		
+		// AUTO GROUP
+		if(typeof req.contents[0] == 'string' & req.contents.length > 1){
+			group = req.contents[0]
+			req.contents.shift()
+		}
+		
+		// AS TABLE
+		if(req.cargo.flags.includes('table')){
+			log = console.table	
+		}
+		
+		if(group){
+			console.group(group)
+			log(...req.contents)
+			console.groupEnd()
+			return ''
+		}
+		
+		log(...req.contents)
 		return ''
+		
 	}
 
 }
