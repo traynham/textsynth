@@ -21,6 +21,11 @@ class TextMerger {
 	plugins = {}                  // BASE PLUGINS
 	tags = {}                     // ALL TAGS INCLUDING ALIASES
 	
+	// OPTIONS
+	options = {
+		debug: true
+	}
+	
 	// DELIMITERS
 	delimiters_default = ['[', ']']
 	delimiters = {
@@ -191,7 +196,7 @@ class TextMerger {
 			parsed = this.parser.parse(
 				template,
 				{
-					DEBUG: false,
+					DEBUG: this.options.debug,
 					payload, 
 					tagsByKind: this.tagsByKind, 
 					tags: this.tags, 
