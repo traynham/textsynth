@@ -23,7 +23,7 @@ class TextMerger {
 	
 	// OPTIONS
 	options = {
-		debug: true
+		debug: false
 	}
 	
 	// DELIMITERS
@@ -54,6 +54,10 @@ class TextMerger {
 		this.setDelimiters(options.delimiters)
 		this.removeTabs = options.removeTabs !== false
 		this.flush_comments = options.flush_comments !== false
+		
+		if(options.debug){
+			this.options.debug = options.debug
+		}
 		
 		if(options.plugins){
 			this.custom_plugins = options.plugins
