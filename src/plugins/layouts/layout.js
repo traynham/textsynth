@@ -155,6 +155,14 @@ export default {
 			// REPLACE THE BLOCK PLACEHOLDER WITH THE BLOCK CONTENT
 			layoutContent = layoutContent.replace(regex, blockContent)
 			
+			// CREATE A REGEX TO MATCH THE CURRENT SELF CLOSING BLOCK PLACEHOLDER
+			// NOTE: Allows for [block: 'name' /] or [block: 'name'.]. Matched in grammar.js
+			const regex2 = new RegExp(`${start}block:?\\s+["']${blockName}["'] ?[/.]?${end}`, 'gm')
+			
+			// REPLACE THE BLOCK PLACEHOLDER WITH THE BLOCK CONTENT
+			layoutContent = layoutContent.replace(regex2, blockContent)
+			
+			
 		}
 		
 		layoutContent = textMerger.process(layoutContent, payload)
