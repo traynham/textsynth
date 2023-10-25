@@ -342,8 +342,9 @@ class TextMerger {
 		
 		let parsedPath = path.parse(thePath)
 		
-		// Declare as markdown if extension is .md.
-		if(parsedPath.ext === '.md'){
+		// Declare as markdown if extension is .md and _synthmd is not specifically false.
+		if(parsedPath.ext === '.md' && payload._synth.md !== false){
+
 			payload._synth.md = true
 		}
 		
