@@ -4,6 +4,9 @@ import TextSynth from '../index.js'
 // Turning off console.
 console.log = () => {}
 
+await TextSynth({
+	debug: true
+})
 
 describe('TextMerger default', () => {
 
