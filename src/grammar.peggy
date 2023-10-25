@@ -55,6 +55,7 @@
 	
 	function _getValueFromPath(item, payload) {
 
+		if(!item){ return '' }
 		
 		if (item.type === 'segments') {
 			debug('GET VALUE FROM PATH › SEGMENTS', item)
