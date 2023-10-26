@@ -98,30 +98,13 @@ export default {
 		
 	},
 	
-	//populateLayoutBlocksObj(textMerger, params, layoutContent) {
+	// POPULATE INITIAL BLOCKS
 	populateLayoutBlocksObj(textMerger, payload, params, layoutContent) {
-		
-		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
-		let {start, end} = textMerger.delimiters.esc
 		
 		// USE THE TOP OBJECT IN THE LAYOUT STACK
 		let blocks = payload._layoutStack[payload._layoutStack.length - 1]
 		
-		// FIND INITIAL BLOCK CONTENT IN THE LAYOUT AND POPULATE THE BLOCKS OBJECT
-		let initialBlockContentMatches
-		const initialBlockContentRegex = new RegExp(`${start}block:?\\s+["']([^"']+)["']\\]([\\s\\S]*?)${start}\\/block${end}`, 'gm')
-		
-		// ITERATE OVER ALL MATCHES IN THE LAYOUT CONTENT
-		while ((initialBlockContentMatches = initialBlockContentRegex.exec(layoutContent)) !== null) {
-			
-			// EXTRACT THE BLOCK NAME AND THE INITIAL CONTENT
-			const blockName = initialBlockContentMatches[1]
-			const initialContent = initialBlockContentMatches[2]
-			
-			// POPULATE THE BLOCKS OBJECT WITH THE INITIAL BLOCK CONTENT
-			blocks[blockName] = initialContent
-			
-		}
+		textMerger.process(layoutContent, { ...payload, blocks })
 		
 	},
 	
@@ -129,40 +112,19 @@ export default {
 		
 		let rendered = ''
 		
-		// DESTRUCTURE THE DELIMITERS OBJECT FOR EASIER USE
-		let {start, end} = textMerger.delimiters.esc
-		
 		// PROCESS THE CONTENT OF THE LAYOUT
 		if(content){
 			rendered = textMerger.process(content, payload)
 		}
 		
-		
 		// USE THE TOP OBJECT IN THE LAYOUT STACK
 		let blocks = payload._layoutStack[payload._layoutStack.length - 1]
+		
+		textMerger.process(layoutContent, { ...payload, blocks})
 		
 		// IF THE PAYLOAD HAS A 'PAGE.BLOCK' PROPERTY, USE THE BLOCK FOR THE RENDERED CONTENT
 		if(payload.page.block){
 			blocks[payload.page.block] = rendered
-		}
-		
-		// ITERATE OVER ALL ENTRIES IN THE BLOCKS OBJECT
-		for (const [blockName, blockContent] of Object.entries(blocks)) {
-			
-			// CREATE A REGEX TO MATCH THE CURRENT BLOCK PLACEHOLDER
-			const regex = new RegExp(`${start}block:?\\s+["']${blockName}["']\\]([\\s\\S]*?)${start}\\/block${end}`, 'gm')
-			
-			// REPLACE THE BLOCK PLACEHOLDER WITH THE BLOCK CONTENT
-			layoutContent = layoutContent.replace(regex, blockContent)
-			
-			// CREATE A REGEX TO MATCH THE CURRENT SELF CLOSING BLOCK PLACEHOLDER
-			// NOTE: Allows for [block: 'name' /] or [block: 'name'.]. Matched in grammar.js
-			const regex2 = new RegExp(`${start}block:?\\s+["']${blockName}["'] ?[/.]?${end}`, 'gm')
-			
-			// REPLACE THE BLOCK PLACEHOLDER WITH THE BLOCK CONTENT
-			layoutContent = layoutContent.replace(regex2, blockContent)
-			
-			
 		}
 		
 		layoutContent = textMerger.process(layoutContent, payload)
