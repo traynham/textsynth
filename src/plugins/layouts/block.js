@@ -36,8 +36,29 @@ export default {
 		}
 	],
 	
-	processor(request) {
-		return request.content
+	processor(req) {
+		
+		let { payload } = req
+		let name = req.params[0].value
+		
+		if(!payload._layoutStack){
+			payload._layoutStack = [{}]
+		}
+		
+		let stack = payload._layoutStack[0]
+		
+		if(!stack[name]){
+			stack[name] = req.content
+		}
+		
+		let content = stack[req.params[0].value]
+		
+		if(req.cargo.flags.includes('markdown')){
+			return req.textMerger.runPlugin('md', {content: content})	
+		}
+		
+		return content
+		
 	}
 
 }
