@@ -33,14 +33,11 @@ describe('layout plugin', () => {
 			_synth: {
 				views: join(__dirname, './views')
 			},
-			layout: `
-				# [block: 'title']Default Title[/block]
-				[block: 'body']Default Body[/block]
-			`,
+			layout: `# [block: 'title']Default Title[/block][block: 'body']Default Body[/block]`,
 		}
 		
 		const input = `---\nblock: "body"\n---\n[block_set: "title"]Page Title[/block_set]This is the body`
-		const expectedOutput = '\n# Page Title\nThis is the body\n'
+		const expectedOutput = '# Page TitleThis is the body'
 		expect(textSynth.merge(input, payload)).toBe(expectedOutput)
 	})
 	
@@ -79,6 +76,12 @@ describe('layout plugin', () => {
 		const input = `[block: 'body']Body Block[/block]`
 		const output = textSynth.merge(input, payload)
 		expect(output).toBe('Body Block')
+	})
+	
+	test('Block -markdown flag test', () => {
+		const input = `[block: 'body', -markdown]# Body Block[/block]`
+		const output = textSynth.merge(input, payload)
+		expect(output).toBe('<h1>Body Block</h1>\n')
 	})
 
 })
