@@ -48,7 +48,7 @@ export default {
 	processor(req) {
 		
 		// DESTRUCTURE THE REQUEST OBJECT
-		let { content, params, payload, textMerger } = req
+		let { content, params, payload, engine } = req
 		
 		// LOAD THE LAYOUT CONTENT
 		let layoutContent = this.loadLayout(payload, params)
@@ -61,16 +61,16 @@ export default {
 		payload._layoutStack.push({})
 		
 		// REMOVE COMMENTS FROM THE LAYOUT CONTENT
-		layoutContent = textMerger.removeComments(layoutContent)
+		layoutContent = engine.removeComments(layoutContent)
 		
 		// REMOVE LEADING TABS FROM THE LAYOUT CONTENT
-		layoutContent = textMerger.removeLeadingTabs(layoutContent)
+		layoutContent = engine.removeLeadingTabs(layoutContent)
 		
 		// POPULATE THE BLOCKS OBJECT WITH THE INITIAL BLOCK CONTENT FROM THE LAYOUT
-		this.populateLayoutBlocksObj(textMerger, payload, params, layoutContent) 
+		this.populateLayoutBlocksObj(engine, payload, params, layoutContent) 
 		
 		// RENDER THE LAYOUT WITH THE BLOCK CONTENT AND RETURN THE RESULT
-		let renderedLayout = this.renderLayout(textMerger, content, layoutContent, params, payload)
+		let renderedLayout = this.renderLayout(engine, content, layoutContent, params, payload)
 		
 		// ONCE THE LAYOUT IS RENDERED, POP THE STACK TO CLEAN UP
 		payload._layoutStack.pop()
@@ -99,35 +99,35 @@ export default {
 	},
 	
 	// POPULATE INITIAL BLOCKS
-	populateLayoutBlocksObj(textMerger, payload, params, layoutContent) {
+	populateLayoutBlocksObj(engine, payload, params, layoutContent) {
 		
 		// USE THE TOP OBJECT IN THE LAYOUT STACK
 		let blocks = payload._layoutStack[payload._layoutStack.length - 1]
 		
-		textMerger.process(layoutContent, { ...payload, blocks })
+		engine.process(layoutContent, { ...payload, blocks })
 		
 	},
 	
-	renderLayout(textMerger, content, layoutContent, params, payload) {
+	renderLayout(engine, content, layoutContent, params, payload) {
 		
 		let rendered = ''
 		
 		// PROCESS THE CONTENT OF THE LAYOUT
 		if(content){
-			rendered = textMerger.process(content, payload)
+			rendered = engine.process(content, payload)
 		}
 		
 		// USE THE TOP OBJECT IN THE LAYOUT STACK
 		let blocks = payload._layoutStack[payload._layoutStack.length - 1]
 		
-		textMerger.process(layoutContent, { ...payload, blocks})
+		engine.process(layoutContent, { ...payload, blocks})
 		
 		// IF THE PAYLOAD HAS A 'PAGE.BLOCK' PROPERTY, USE THE BLOCK FOR THE RENDERED CONTENT
 		if(payload.page.block){
 			blocks[payload.page.block] = rendered
 		}
 		
-		layoutContent = textMerger.process(layoutContent, payload)
+		layoutContent = engine.process(layoutContent, payload)
 		
 		// RETURN THE FINAL LAYOUT CONTENT WITH ALL BLOCK PLACEHOLDERS REPLACED
 		return layoutContent
