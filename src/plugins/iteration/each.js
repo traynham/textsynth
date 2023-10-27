@@ -74,7 +74,7 @@ export default {
 				payload.value = item
 				payload.index = index
 				payload[name] = item
-				output += req.textMerger.process(req.content, payload)
+				output += req.engine.process(req.content, payload)
 			})
 			
 		} else if (typeof iterable === 'object') {
@@ -87,7 +87,7 @@ export default {
 				payload.index = index
 				payload[name] = {key, value}
 				
-				output += req.textMerger.process(req.content, payload)
+				output += req.engine.process(req.content, payload)
 				
 			})
 			
