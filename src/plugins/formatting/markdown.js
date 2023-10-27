@@ -42,16 +42,16 @@ export default {
 	processor(req) {
 		
 		// PROCESS
-		let output = req.textMerger.process(req.content, req.payload)
+		let output = req.engine.process(req.content, req.payload)
 		
 		// UNESCAPE
-		output = req.textMerger.runPlugin('unescape_delimiters', { content: output })
+		output = req.engine.runPlugin('unescape_delimiters', { content: output })
 		
 		// RENDER MD
 		output = md.render(output)
 		
 		// ESCAPE
-		output = req.textMerger.runPlugin('escape_delimiters', { content: output })
+		output = req.engine.runPlugin('escape_delimiters', { content: output })
 		
 		return output
 		
