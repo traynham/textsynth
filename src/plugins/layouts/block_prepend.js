@@ -36,7 +36,7 @@ export default {
 		}
 	],
 	
-	processor({ content, params, payload, textMerger}) {
+	processor({ content, params, payload, engine}) {
 		
 		if(!payload._layoutStack){
 			return ''
@@ -45,12 +45,12 @@ export default {
 		// EXTRACT THE BLOCK NAME FROM THE PARAMETERS PASSED IN
 		const blockName = params[0].value
 		
-		// ACCESS THE MOST RECENT LAYOUT FROM THE STACK IN TEXTMERGER
+		// ACCESS THE MOST RECENT LAYOUT FROM THE STACK
 		let currentLayout = payload._layoutStack[payload._layoutStack.length - 1]
 		
 		// PREPEND PROCESSED CONTENT TO THE CURRENT BLOCK. IF THE BLOCK DOES NOT EXIST, 
 		// IT CREATES A NEW BLOCK WITH THE PROCESSED CONTENT.
-		currentLayout[blockName] = textMerger.process(content, payload) + currentLayout[blockName]
+		currentLayout[blockName] = engine.process(content, payload) + currentLayout[blockName]
 		
 		// AS THIS IS A BLOCK_PREPEND PROCESSOR, IT DOESN'T NEED TO RETURN ANY CONTENT 
 		// FOR THE CURRENT PROCESSING STAGE, SO IT RETURNS AN EMPTY STRING.
