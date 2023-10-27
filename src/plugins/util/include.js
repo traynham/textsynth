@@ -45,9 +45,9 @@ export default {
 		// If the file exists, read its content.
 		const fileContent = fs.readFileSync(includePath, {encoding:'utf8'})
 		
-		// Process the included file content using the textMerger, passing in the file's content and the payload.
+		// Process the included file content using the engine, passing in the file's content and the payload.
 		// This allows nested includes and processing of other tags within the included file.
-		const mergedContent = req.textMerger.process(fileContent, req.payload)
+		const mergedContent = req.engine.process(fileContent, req.payload)
 		
 		// Return the processed content of the included file.
 		return mergedContent
