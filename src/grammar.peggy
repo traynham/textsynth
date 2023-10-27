@@ -1,5 +1,7 @@
 {
-	var { DEBUG, payload, tags, textMerger } = options
+
+	var { DEBUG, engine, payload, tags } = options
+
 
 	function isSingle(tag) {
 		return options.tagsByKind.single.includes(tag);
@@ -252,7 +254,7 @@ tag "Single Tag"
 				content: contents[0],
 				contents: contents,
 				payload: payload,
-				textMerger: textMerger,
+				engine,
 				cargo: cargo
 			}
 
@@ -365,7 +367,7 @@ containerTag "Container Tag"
 				content:  content ? content.map(e => e.text).join('') : '', 
 				cargo,
 				payload,
-				textMerger
+				engine
 			}
 
 			// RUN PLUGIN.
