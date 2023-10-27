@@ -15,7 +15,7 @@ import walk from 'walk-sync'
 /**
  * Class for merging text using plugins and tags.
  */
-class TextMerger {
+class Engine {
 	
 	// PLUGINS/TAGS
 	plugins = {}                  // BASE PLUGINS
@@ -46,7 +46,7 @@ class TextMerger {
 	global_payload    = {}         // DEFAULT PAYLOAD
 	
 	/**
-	 * Constructor for TextMerger class.
+	 * Constructor for Engine class.
 	 * @param {Object} options - Optional settings for the merger.
 	 */
 	constructor(options = {}) {
@@ -75,7 +75,7 @@ class TextMerger {
 	}
 
 	/**
-	 * Initialize the TextMerger by loading default and custom plugins.
+	 * Initialize the Engine by loading default and custom plugins.
 	 */
 	async init() {
 		
@@ -204,7 +204,7 @@ class TextMerger {
 					payload, 
 					tagsByKind: this.tagsByKind, 
 					tags: this.tags, 
-					textMerger: this,
+					engine: this,
 					grammarSource: 'grammar.peggy',
 					tracer: {trace: (items) => console.log('Trace items:', items)}
 				}
@@ -435,7 +435,7 @@ class TextMerger {
 				content: args.content,
 				params: args.params,
 				payload: args.payload,
-				textMerger: this
+				engine: this
 			}
 			
 			// Run the plugin
@@ -576,13 +576,13 @@ async function expressTextSynthEngine(filePath, options, callback) {
 /* c8 ignore end */
 
 
-// CREATE A NEW TEXTMERGER AND INIT.
-async function createTextSynth(opt) {
-	const textMerger = new TextMerger(opt)
-	await textMerger.init()
-	return textMerger
+// CREATE AND INIT ENGINE.
+async function initEngine(opt) {
+	const engine = new Engine(opt)
+	await engine.init()
+	return engine
 }
 
 
-export default createTextSynth // textSynth
-export { createTextSynth, expressTextSynthEngine }
+export default initEngine // textSynth
+export { initEngine, expressTextSynthEngine }
