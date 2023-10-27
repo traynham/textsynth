@@ -68,7 +68,7 @@ export default {
 		}
 		
 		// Process the content
-		const processedContent = req.textMerger.merge(req.content, req.payload)
+		const processedContent = req.engine.merge(req.content, req.payload)
 		
 		// Cache the processed content
 		fs.writeFileSync(cacheFilePath, processedContent, 'utf-8')
