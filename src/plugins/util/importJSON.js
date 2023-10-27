@@ -75,7 +75,7 @@ export default {
 			
 		}
 		
-		let fileContent = req.textMerger.fetchSyncJSON(parsedURL.href)
+		let fileContent = req.engine.fetchSyncJSON(parsedURL.href)
 		
 		if(fileContent.err){
 			return `${fileContent.err.message}`
