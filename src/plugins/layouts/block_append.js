@@ -36,7 +36,7 @@ export default {
 		}
 	],
 
-	processor({ content, params, payload, textMerger}) {
+	processor({ content, params, payload, engine}) {
 		
 		if(!payload._layoutStack){
 			return ''
@@ -50,7 +50,7 @@ export default {
 
 		// APPEND PROCESSED CONTENT TO THE CURRENT BLOCK. IF THE BLOCK DOES NOT EXIST,
 		// IT CREATES A NEW BLOCK WITH THE PROCESSED CONTENT.
-		currentLayout[blockName] = currentLayout[blockName] + textMerger.process(content, payload)
+		currentLayout[blockName] = currentLayout[blockName] + engine.process(content, payload)
 		
 		// SINCE THIS IS A BLOCK_APPEND PROCESSOR, IT DOESN'T NEED TO RETURN ANY CONTENT 
 		// FOR THE CURRENT PROCESSING STAGE, HENCE IT RETURNS AN EMPTY STRING.
