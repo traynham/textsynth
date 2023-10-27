@@ -73,7 +73,7 @@ export default {
 
 		
 		if(conditionIsTrue){
-			return request.textMerger.process(request.content, request.payload)
+			return request.engine.process(request.content, request.payload)
 		}
 		
 		return ''
