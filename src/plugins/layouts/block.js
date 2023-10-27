@@ -53,8 +53,10 @@ export default {
 		
 		let content = stack[req.params[0].value]
 		
+		if(!content){ return content }
+		
 		if(req.cargo.flags.includes('markdown')){
-			return req.textMerger.runPlugin('md', {content: content})	
+			return req.engine.runPlugin('md', {content: content})	
 		}
 		
 		return content
