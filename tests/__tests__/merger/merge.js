@@ -23,7 +23,7 @@ describe("merge", () => {
 	test("should set views if no views in payload", () => {
 		const template = 'test template'
 		const payload = { _synth: {} }
-		textSynth.views = 'test views'
+		textSynth.options.paths.views = 'test views'
 		textSynth.merge(template, payload)
 		expect(payload._synth.views).toBe('test views')
 	})
@@ -32,7 +32,7 @@ describe("merge", () => {
 		const template = 'test template \n //comment \n /* comment */ <!-- comment -->'
 		const payload = { _synth: { flush_comments: true } }
 		textSynth.merge(template, payload)
-		expect(textSynth.flush_comments).toBe(true)
+		expect(textSynth.options.flush_comments).toBe(true)
 	})
 
 	test("should remove comments if flush_comments is true", () => {
@@ -44,7 +44,7 @@ describe("merge", () => {
 	test("should remove leading tabs if removeTabs is true", () => {
 		const template = '\ttest template'
 		const payload = { _synth: {} }
-		textSynth.removeTabs = true
+		textSynth.options.removeTabs = true
 		expect(textSynth.merge(template, payload)).toBe('test template')
 	})
 	
