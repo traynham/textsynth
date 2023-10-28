@@ -35,7 +35,7 @@ export default {
 		if(!req.content) { return req.content }
 		if(typeof req.content !== 'string') { return req.content }
 		
-		let { raw, enc } = req.engine.delimiters
+		let { raw, enc } = req.engine.options.delimiters
 		return req.content?.split(raw.start).join(enc.start).split(raw.end).join(enc.end)
 		
 	}
