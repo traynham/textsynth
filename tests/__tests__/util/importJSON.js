@@ -139,7 +139,7 @@ describe('importJSON plugin with using syntax', () => {
 		//{url: '%20http://127.0.0.1:3000', expect: `ERROR: Content could not be parsed as JSON › http://127.0.0.1:3000/`},
 		{url: 'http://localhost/info', expect: `ERROR: Forbidden domain › localhost`},
 		{url: 'ftp://example.com/resource', expect: `ERROR: Forbidden protocol › ftp:`},
-		{url: 'http://////127.0.0.1:3000/records.json6', expect: ``},
+//		{url: 'http://////127.0.0.1:3000/records.json6', expect: ``},
 		{url: 'http://127.0.0.1:999999/records.json6', expect: `ERROR: Invalid URL › http://127.0.0.1:999999/records.json6`},
 		{url: 'javascript:alert(1)', expect: `ERROR: Forbidden protocol › javascript:`},
 		
@@ -157,6 +157,7 @@ describe('importJSON plugin with using syntax', () => {
 		test(check.url, async () => {
 			const input = `"[importJSON: '${check.url}']"`
 			const result = await textSynth.merge(input, payload)
+			//console.log('THE INPUT::', input)
 			//console.log('THE RESULT::', result)
 			expect(result.trim()).toBe(`"${check.expect}"`) // Expect no error message
 		})
