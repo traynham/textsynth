@@ -18,29 +18,33 @@ import walk from 'walk-sync'
 class Engine {
 	
 	// PLUGINS/TAGS
-	plugins = {}                  // BASE PLUGINS
-	tags = {}                     // ALL TAGS INCLUDING ALIASES
+	plugins = {}                                          // BASE PLUGINS
+	tags = {}                                             // ALL TAGS INCLUDING ALIASES
 	
 	// OPTIONS
 	options = {
-		debug: false
+		
+		debug: false,                                     // Fill the console with debug messages.
+		
+		delimiters: {
+			default: ['[', ']'],                          // DEFAULT DELIMITERS
+			raw: {},                                      // RAW START/END DELIMITERS
+			esc: {},		                              // HTML ESCAPED START/END DELIMITERS
+			enc: {}		                                  // REGEX ESCAPED START/END DELIMITERS
+		},
+		
+		flush_comments: true,                             // REMOVE COMMENTS BEFORE PROCESSING
+		removeTabs: true,                                 // REMOVE LEADING TABS BEFORE PROCESSING
+		
+		paths: {
+			app: '',                                      // Path to the root of the app.
+			src: dirname(fileURLToPath(import.meta.url)), // Path to src directory
+			plugins: 'plugins',                           // CUSTOM PLUGINS DIR FROM APP ROOT
+			views: '',                                    // Path to the views directory
+			
+		}
+		
 	}
-	
-	// DELIMITERS
-	delimiters_default = ['[', ']']
-	delimiters = {
-		raw: {},                  // RAW START/END DELIMITERS
-		esc: {},		          // HTML ESCAPED START/END DELIMITERS
-		enc: {}		              // REGEX ESCAPED START/END DELIMITERS
-	}
-	
-	// SETTINGS
-	custom_plugins    = 'plugins'  // CUSTOM PLUGINS DIR FROM APP ROOT
-	flush_comments    = true       // REMOVE COMMENTS BEFORE PROCESSING
-	removeTabs        = true       // REMOVE LEADING TABS BEFORE PROCESSING
-	showUndefinedTags = true       // SHOW/HIDE UNDEFINED TAGS
-	verbose           = false      // ALLOW VERBOSE CONSOLE LOG CHATER
-	views                          // VIEWS DIRECTORY
 	
 	// OTHER
 	global_payload    = {}         // DEFAULT PAYLOAD
@@ -49,28 +53,19 @@ class Engine {
 	 * Constructor for Engine class.
 	 * @param {Object} options - Optional settings for the merger.
 	 */
-	constructor(options = {}) {
+	constructor(opt = {}) {
 		
-		this.setDelimiters(options.delimiters)
-		this.removeTabs = options.removeTabs !== false
-		this.flush_comments = options.flush_comments !== false
+		let options = this.options
 		
-		if(options.debug){
-			this.options.debug = options.debug
-		}
+		// POPULATE OPTIONS
+		options.paths.app = this._getAppRoot()
+		options.removeTabs = opt.removeTabs !== false
+		options.flush_comments = opt.flush_comments !== false
+		options.debug = opt.debug == true ? true : false
+		options.paths.plugins = opt.plugins ? opt.plugins : 'plugins'
+		options.paths.views = path.join( options.paths.app, opt.views ? opt.views : 'views' )
 		
-		if(options.plugins){
-			this.custom_plugins = options.plugins
-		}
-		
-		if(options.verbose){
-			this.verbose = options.verbose
-		}
-		
-		this.views = path.join(
-			this._getAppRoot(), 
-			options.views ? options.views : 'views'
-		)
+		this.setDelimiters(opt.delimiters)
 		
 	}
 
@@ -80,13 +75,11 @@ class Engine {
 	async init() {
 		
 		// LOAD DEFAULT PLUGINS
-		const __filename = fileURLToPath(import.meta.url) // PATH TO MERGER.JS
-		const __dirname = dirname(__filename)
-		const pluginDirectory = join(__dirname, 'plugins')
+		const pluginDirectory = join(this.options.paths.src, 'plugins')
 		await this._loadPluginsDir(pluginDirectory, 'Core')
 		
 		// LOAD CUSTOM PLUGINS
-		let custom = path.join(this._getAppRoot(), this.custom_plugins)
+		let custom = path.join(this.options.paths.app, this.options.paths.plugins)
 		await this._loadPluginsDir(custom, 'Custom')
 		
 		this.peggy_setup()
@@ -103,7 +96,6 @@ class Engine {
 	alias = (tag, alias) => {
 		if(!Array.isArray(alias)) { alias = [alias] }
 		alias.forEach( alias => {
-			//this.tags[alias] = this.plugins[tag]
 			this.tags[alias] = {...this.plugins[tag], alias: alias}
 		})
 	}
@@ -117,10 +109,7 @@ class Engine {
 			return validate
 		}
 		
-		// MOVE TO CONSTRUCTER?
-		const __filename = fileURLToPath(import.meta.url) // PATH TO MERGER.JS
-		const __dirname = dirname(__filename)
-		const workerPath = join(__dirname, 'workers', 'worker_fetch_json.js')
+		const workerPath = join(this.options.paths.src, 'workers', 'worker_fetch_json.js')
 		
 		const syncFn = createSyncFn(workerPath)
 		const results = syncFn(uri)
@@ -175,9 +164,7 @@ class Engine {
 			}
 		}
 		
-		const __filename = fileURLToPath(import.meta.url) // PATH TO MERGER.JS
-		const __dirname = dirname(__filename)
-		const grammarPath = join(__dirname, 'grammar.peggy')
+		const grammarPath = join(this.options.paths.src, 'grammar.peggy')
 		
 		const grammar = fs.readFileSync(grammarPath, 'utf-8')
 		
@@ -233,11 +220,11 @@ class Engine {
 		// SET PAYLOAD TO GLOBAL PAYLOAD AND MERGE PAYLOAD.
 		payload = {...this.global_payload, ...payload}
 		
-		let {start, end} = this.delimiters.raw
+		let {start, end} = this.options.delimiters.raw
 		
 		payload ??= { _synth: {} }
 		payload._synth ??= {}
-		payload._synth.views ??= this.views
+		payload._synth.views ??= this.options.paths.views
 		
 		let matter = Matter(template)
 		
@@ -262,7 +249,7 @@ class Engine {
 		}
 		
 		if('flush_comments' in payload._synth){
-			this.flush_comments = payload._synth.flush_comments
+			this.options.flush_comments = payload._synth.flush_comments
 		}
 		
 		//IF HAS LAYOUT
@@ -294,7 +281,7 @@ class Engine {
 		// PROCESS
 		let processed = this.process(template, payload)
 		
-		let { raw, esc } = this.delimiters
+		let { raw, esc } = this.options.delimiters
 		
 		return processed
 			.split(esc.start).join(raw.start)
@@ -304,7 +291,7 @@ class Engine {
 	
 	removeComments(text) {
 		
-		if(!this.flush_comments){ return text }
+		if(!this.options.flush_comments){ return text }
 		
 		// Remove single-line comments
 		text = text.replace(/(?<!:)(\/\/[^\n]*)/g, '')
@@ -320,7 +307,7 @@ class Engine {
 	}
 	
 	removeLeadingTabs(text) {
-		if(!this.removeTabs){ return text }
+		if(!this.options.removeTabs){ return text }
 		return text.replace(/^\t+/gm, '')
 	}
 	
@@ -332,11 +319,12 @@ class Engine {
 	 * @param {Object} payload - Payload to be used for merging.
 	 * @returns {Promise<string>} Merged file.
 	 */
-	async mergeFile(filePath, payload) {
+	//async mergeFile(filePath, payload) {
+	mergeFile(filePath, payload) {
 		
 		payload ??= { _synth: {} };
 		payload._synth ??= {};
-		payload._synth.views ??= this.views;
+		payload._synth.views ??= this.options.paths.views;
 		
 		let thePath = path.join(payload._synth.views, filePath)
 		
@@ -361,7 +349,8 @@ class Engine {
 		
 		// MERGE
 		const template = fs.readFileSync(thePath, 'utf-8')
-		return await this.merge(template, payload)
+		//return await this.merge(template, payload)
+		return this.merge(template, payload)
 		
 	}
 	
@@ -455,23 +444,16 @@ class Engine {
 	 * Set delimiters for tags.
 	 * @param {Object} options - Options for setting delimiters.
 	 */
-	setDelimiters(delimiters = this.delimiters_default){
+	setDelimiters(delimiters = this.options.delimiters.default){
 		
 		let [ start, end ] = delimiters
+		let del = this.options.delimiters
 		
-		this.delimiters = {
-			raw: {
-				start: start,
-				end:   end
-			},
-			enc: {
-				start: entities.encodeHTML(start),
-				end:   entities.encodeHTML(end)
-			},
-			esc: {
-				start: start.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'),
-				end:   end.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
-			}
+		del.raw = { start: start, end: end }
+		del.enc = { start: entities.encodeHTML(start), end: entities.encodeHTML(end) }
+		del.esc = {
+			start: start.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'),
+			end:   end.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
 		}
 		
 	}
@@ -531,7 +513,7 @@ class Engine {
 	async _loadPluginsDir(pluginDirectory, suite) {
 		
 		if(!fs.existsSync(pluginDirectory)){
-			if(this.verbose){ console.log(`Plugin directory does not exist: ${pluginDirectory}`) }
+			if(this.options.debug){ console.log(`Plugin directory does not exist: ${pluginDirectory}`) }
 			return 'Plugin directory does not exist.'
 		}
 		
