@@ -16,7 +16,7 @@ describe('encode_delimiters plugin', () => {
 
 	test('escapes TextSynth tag delimiters', () => {
 		const input = "[encode_delimiters: text]"
-		expect(textSynth.merge(input, payload)).toBe("&lbrack;uppercase 'boom'&rbrack;")  // Replace 'Magic' with the expected escaped string
+		expect(textSynth.merge(input, payload)).toBe("&#91;uppercase 'boom'&#93;")
 	})
 
 	test('returns an empty string when the content is empty', () => {
