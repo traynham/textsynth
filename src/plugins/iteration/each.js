@@ -54,6 +54,8 @@ export default {
 
 	processor(req) {
 		
+//		console.log('REQ::', req)
+		
 		let payload = {...req.payload}
 		
 		let iterable = req.params[0]
@@ -74,7 +76,8 @@ export default {
 				payload.value = item
 				payload.index = index
 				payload[name] = item
-				output += req.engine.process(req.content, payload)
+				//output += req.engine.process(req.content, payload)
+				output += req.engine.process(req.contentRaw, payload)
 			})
 			
 		} else if (typeof iterable === 'object') {
@@ -87,7 +90,8 @@ export default {
 				payload.index = index
 				payload[name] = {key, value}
 				
-				output += req.engine.process(req.content, payload)
+				//output += req.engine.process(req.content, payload)
+				output += req.engine.process(req.contentRaw, payload)
 				
 			})
 			
