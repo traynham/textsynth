@@ -1,0 +1,27 @@
+<title>
+[block: 'title']
+	This is the Title.
+[/block]
+</title>
+
+<!-- [block: 'bogus']
+This block never changes and should pass through?
+[/block] -->
+
+//# This is the Layout Test
+
+[block: 'header']
+	This is the header.
+[/block]
+
+[block: 'body', -markdown]The OG bodacious body[/block]
+
+/*
+[block: 'content']
+	This is the CONTENT body.
+[/block]
+*/
+
+[block: 'footer']
+	This is the footer?
+[/block]
