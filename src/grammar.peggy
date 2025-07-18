@@ -2,18 +2,21 @@
 
 	var { DEBUG, engine, payload, tags } = options
 
-
+	const MERGE_STOP_WORDS = new Set(['else'])
+	
 	function isSingle(tag) {
-		return options.tagsByKind.single.includes(tag);
+		if(MERGE_STOP_WORDS.has(tag)) return false
+		let theTag = options.tags?.[tag]
+		if(!theTag) return false
+		return theTag.kind ? theTag.kind === 'single' : true
 	}
-
+	
 	function isContainer(tag) {
-		return options.tagsByKind.container.includes(tag);
+		return options.tags?.[tag]?.kind === 'container'
 	}
-
+	
 	function debug(title, message){
-		if(!DEBUG){ return ''}
-		console.log(`DEBUG › ${title} ›`, message)
+		if (DEBUG) console.log(`DEBUG › ${title} ›`, message)
 	}
 
 	function processContent(content, cargo) {
@@ -54,51 +57,100 @@
 		return contents
 
 	}
-	
-	function _getValueFromPath(item, payload) {
 
-		if(!item){ return '' }
+	function _getValueFromPath(item, payload) {
 		
-		if (item.type === 'segments') {
-			debug('GET VALUE FROM PATH › SEGMENTS', item)
-			item = item.segments.map(segment => segment.value).join('.')
+		if (!item) return ''
+		
+		// If item is already a raw value (number, boolean), return as is
+		if (
+			typeof item === 'number' ||
+			typeof item === 'boolean' ||
+			item === null ||
+			item === undefined
+		) {
+			return item
 		}
 		
-		let path = item;
-		if (item.value) { path = item.value }
-
-		if (!path) { return '' }
-		if (typeof path !== 'string') { return path }
-
-		// Treat path as a string representing a property path. Return path if not resolved.
-		let value = path.split('.').reduce((obj, i) => (obj?.[i]), payload)
-
-		if (value === undefined && item.type === 'string') { value = item.value }
-
-		// Return a shallow copy of the array if it's an array, or return the value directly
-		return Array.isArray(value) ? [...value] : value;
+		// Accept either a segments object or a string (legacy)
+		let segments = item
+		
+		if (item.type === 'segments') {
+			segments = item.segments
+		} else if (typeof item === 'string') {
+			// Fallback: handle as dot-path
+			return item.split('.').reduce((obj, key) => obj?.[key], payload)
+		} else {
+			return item.value || ''
+		}
+		
+		let value = payload
+		
+		for (let segment of segments) {
+			
+			if (segment.type === 'identifier' || segment.type === 'dot') {
+				value = value?.[segment.value]
+			}
+			else if (segment.type === 'plugin') {
+				
+				const plugin = tags[segment.name]
+				
+				// ON INVALID PLUGIN
+				if (!plugin || typeof plugin.processor !== 'function') {
+					debug('PLUGIN NOT FOUND', `Plugin "${segment.name}" not found or invalid—skipped.`)
+					continue
+				}
+				
+				// ON NOT FOUND IN SINLGE, ASSUME CONTAINER AND SKIP.
+				if (!isSingle(segment.name)) {
+					debug('PLUGIN SKIPPED', `Plugin "${segment.name}" is a container and was skipped in value chain.`)
+					continue
+				}
+				value = plugin.processor({
+					content: value,
+					payload,
+					params: segment.args?.map(a => a.value !== undefined ? a.value : a)
+				})
+			}
+			else if (segment.type === 'bracket') {
+				value = value?.[segment.value]
+			}
+			
+		}
+		
+		return value
 	}
 	
 	function _evaluateCondition(condition, payload) {
-
+		
 		let { left, operator, right} = condition
-
+		
 		const leftValue = _getValueFromPath(left.value, payload)
 		left = (leftValue !== undefined) ? leftValue : left.value
-
+		
 		const rightValue = _getValueFromPath(right.value, payload)
 		right = (rightValue !== undefined) ? rightValue : right.value
-
-		switch (operator) {
-			case '==':  return left == right
-			case '===': return left === right
-			case '!=':  return left != right
-			case '!==': return left !== right
-			case '<':   return left < right
-			case '>':   return left > right
-			case '<=':  return left <= right
-			case '>=':  return left >= right
+		
+		debug('_EVALUATECONDITION() :: TRUTHY TEST', {left, operator, right})
+		
+		// CATCH TRUTHY VALUES.
+		if (left && !operator && !right) return true;
+		
+		const OPS = {
+			'=='  : (l, r) => l == r,
+			'===' : (l, r) => l === r,
+			'!='  : (l, r) => l != r,
+			'!==' : (l, r) => l !== r,
+			'<'   : (l, r) => l < r,
+			'>'   : (l, r) => l > r,
+			'<='  : (l, r) => l <= r,
+			'>='  : (l, r) => l >= r,
 		}
+		
+		if (operator in OPS) return OPS[operator](left, right)
+		
+		// Default fallback for unknown operators
+		return false;
 		
 	}
 
@@ -164,7 +216,13 @@ expression "Expression"
 
 // MERGE
 merge "Merge Tag"
-	= 	tagName:merge_identifier &{ return !isContainer(tagName.value) }
+
+	= tagName:merge_identifier
+		&{ 
+			// only match if it's not a container tag *and* not a reserved word such as "else"
+			return !isContainer(tagName.value) 
+			&& !MERGE_STOP_WORDS.has(tagName.value);
+		}	
 		{
 			
 			debug('TRIGGER:: MERGE', tagName)
@@ -257,9 +315,9 @@ tag "Single Tag"
 				engine,
 				cargo: cargo
 			}
-
+			
 			let render = tags[tagName.value].processor(req)
-
+			
 			return {
 				render: render,
 				text: text()
@@ -300,8 +358,65 @@ container_signatures "Container Signatures"
 			debug('TRIGGER :: CONTAINER WITHOUT CONTENT', tagName)
 			return { tagName, close, params, content: [] }
 		}
-
-	// SIGNATURE › CONTAINER › WITH ARGS
+		
+	// SIGNATURE › CONTAINER › IF
+	/	"[if:" _ cond:ifArguments _ "]" _
+			content:expression*
+			elseIfBranches: (ElseIfBranch)*
+			elseBranches: (ElseBranch)*
+		"[/if]" _
+		{
+			
+			debug('TRIGGER :: CONTAINER', 'IF')
+			debug('TRIGGER :: CONTAINER WITH ARGS › PARAMS', cond)
+			
+			let chosen = null
+			let params = [{ type: 'condition', value: false, default: true }]
+			
+			debug('TRIGGER :: CONTAINER › ELSEBRANCHES', elseBranches)
+			
+			let lastElse = elseBranches.length > 0 ? elseBranches[elseBranches.length - 1] : null;
+			
+			debug('TRIGGER :: CONTAINER › LAST ELSE', lastElse)
+			
+			
+			// Determine which branch to render
+			if (cond[0]?.value) {
+				chosen = content
+				//chosen = content.splice(1)
+				params = cond
+				debug('TRIGGER :: CONTAINER › IF IS TRUE', cond)
+				debug('TRIGGER :: CONTAINER › IF IS TRUE CONTENT', chosen)
+			} else {
+				for (const b of elseIfBranches) {
+					if (b.condition[0]?.value) {
+						chosen = b.content
+						params = b.params
+						//chosen = b
+						break
+					}
+				}
+			}
+			
+			if (!chosen && lastElse) {
+				chosen = lastElse.content
+				params = [{ type: 'condition', value: true }]
+			}
+			
+			
+			debug('TRIGGER :: CONTAINER › IF STATEMENT CONTENT', chosen)
+			
+			return {
+				tagName: { type: 'identifier', value: 'if' },
+				close: { type: 'identifier', value: 'if' },
+				params: params,
+				content: chosen
+			}
+			
+		}
+		
+		
+	// SIGNATURE › CONTAINER › WITH ARGS??
 	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ "]" nl
 			content:expression*
 		"[/" close:identifier "]" nl
@@ -310,7 +425,8 @@ container_signatures "Container Signatures"
 			debug('TRIGGER :: CONTAINER WITH ARGS › PARAMS', params)
 			return { tagName, close, params, content }
 		}
-
+		
+		
 	// SIGNATURE › CONTAINER SELF CLOSING › WITH ARGS
 	/	"[" tagName:identifier &{ return isContainer(tagName.value) }  ":" _ params:arguments _ [/.] _ "]"
 		{
@@ -321,19 +437,21 @@ container_signatures "Container Signatures"
 				params,
 				content: [{type: 'string', value: ''}]
 			}
-
-		}
-
-
-	// SIGNATURE › CONTAINER › WITHOUT ARGS
-	/ 	"[" tagName:identifier &{ return isContainer(tagName.value) }  _ "]" nl
-			content:(expression* / _)
-		"[/" close:identifier "]" nl
-		{
-			debug('TRIGGER :: CONTAINER WITHOUT ARGS', tagName)
-			return { tagName, close, params: [], content }
+			
 		}
 		
+	// SIGNATURE › CONTAINER › WITHOUT COLON, WITH ARGS
+	/	"[" tagName:identifier &{ return isContainer(tagName.value) } _ params:arguments? "]" nl
+			//content:(expression* / _)
+			content:expression*
+		"[/" close:identifier "]" nl
+		{
+			debug('TRIGGER :: CONTAINER WITHOUT COLON, WITH ARGS', tagName)
+			debug('TRIGGER :: CONTAINER WITHOUT COLON, WITH ARGS › CONTENT', content)
+			//return { tagName, close, params: params || [], content }
+			return { tagName, close, params: params, content }
+		}
+
 
 // CONTAINER
 containerTag "Container Tag"
@@ -342,19 +460,19 @@ containerTag "Container Tag"
 		{
 			
 			debug('TRIGGER :: CONTAINER PROC', sig)
-
+			
 			let {tagName, close, params, content} = sig
-
+			
 			if(tagName.value == 'ignore'){
 				return {render: content}
 			}
-
+			
 			if (tagName.value !== close.value) {
 				throw new Error(`CONTAINER › Mismatched tags ${tagName.value} and ${close.value}`);
 			}
-
+			
 			let cargo = processCargo(params)
-
+			
 			let req = {
 				name: tagName.value,
 				params: params.map( param => {
@@ -364,15 +482,18 @@ containerTag "Container Tag"
 					if(param.type == 'objectField'){ return param.value}
 					return param 
 				}), 
-				content:  content ? content.map(e => e.text).join('') : '', 
+				//content:  content ? content.map(e => e.text).join('') : '',
+				content: content ? content.map(e => e.render).join('') : '',
+				//contentRaw: content || [],
+				contentRaw:  content ? content.map(e => e.text).join('') : '',
 				cargo,
 				payload,
 				engine
 			}
-
+			
 			// RUN PLUGIN.
 			let render = tags[tagName.value].processor(req)
-
+			
 			return {
 				render: render,
 				text: text()
@@ -388,19 +509,25 @@ parameters
 // LIST OF ARGS, DELIMITED.
 arguments
 	= arg|..,delimiter|
+	
+ifArguments
+	= ifArg|..,delimiter|
 
 delimiter
 	=	_ [, ] _
 
+ifArg
+	=	logicalOrExpression
+
 arg
-	=	logicalAndExpression
-	/	logicalOrExpression
-	/	condition
-	/	attribute
+//	=	logicalAndExpression
+//	/	logicalOrExpression
+//	/	condition
+	=	attribute
 	/	quotedText
-	/	flag
-	/	classPattern
-	/	idPattern
+//	/	flag
+//	/	classPattern
+//	/	idPattern
 	/	usingPattern
 	/	boolean
 	/	objectField
@@ -409,7 +536,7 @@ arg
 	/	number
 	/	nullLiteral
 	/	undefinedLiteral
-	/	otherValue
+//	/	otherValue
 	
 // SINGLE/DOUBLE QUOTED
 quotedText
@@ -418,7 +545,9 @@ quotedText
 
 
 pathSegment
-    =	"." segment:identifier {
+	= "." func:pluginCall { return [{type: 'plugin', name: func.name, args: func.args}]; }
+	/ func:pluginCall { return [{type: 'plugin', name: func.name, args: func.args}]; }
+    /	"." segment:identifier {
 			let value = segment.value.split('.').map(val => {
 				return {type: 'dot', value: val}
 			})
@@ -438,17 +567,27 @@ path
 		return { type: "segments", segments: segments.flat() }
     }
 
+pluginCall
+	= name:identifier "(" _ ")" { return {type: 'plugin', name: name.value, args: []}; }
+	/ name:identifier "(" args:arguments ")" { return {name: name.value, args}; }
+	
+	
 // RENAME TO PROPERTYPATH?
 objectField
 
 	=	obj:identifier path:path {
 
+		/*
 		let root = obj.value.split('.').map(item => {
 			return {type: 'identifier', value: item}
 		})
 
 		let segments = { type: "segments", segments: [...root, ...path.segments] };
 
+		return {type: 'objectField', value:_getValueFromPath(segments, payload)}
+		*/
+		
+		let segments = { type: "segments", segments: [obj, ...path.segments] };
 		return {type: 'objectField', value:_getValueFromPath(segments, payload)}
 
     }
@@ -462,7 +601,8 @@ objectField
 
 
 identifier
-	=	head:[a-zA-Z_] tail:[a-zA-Z0-9._]* { return { type: 'identifier', value: head + tail.join('') } }
+	=	head:[a-zA-Z_] tail:[a-zA-Z0-9_]* { return { type: 'identifier', value: head + tail.join('') } }
+//	=	head:[a-zA-Z_] tail:[a-zA-Z0-9._]* { return { type: 'identifier', value: head + tail.join('') } }
 
 index
 	=	"[" i:[0-9]+ "]" { return { type: 'index', value: parseInt(i.join(''), 10) }; }
@@ -506,6 +646,9 @@ nl "New Line"
 condition "Condition"
 
 	= 	left:operand _ operator:operators _ right:operand {
+			debug(':::::::::::::::: LEFT', left)
+			debug(':::::::::::::::: OPERATOR', operator)
+			debug(':::::::::::::::: RIGHT', right)
 			let value = _evaluateCondition({left, operator, right}, payload)
 			return { type: "condition", value: value }
 		}
@@ -518,39 +661,25 @@ condition "Condition"
 		return op
 	}
 
-logicalAndExpression "LogicalAndExpression"
-    =	left:(condition / operand ) _ "&&" _ right:(condition / operand) { 
-
-			// NOTE: NAME IS NOT COVERED. SHOULD IT BE?
-			if(left.type == 'quotedText'){
-				left.value = Boolean(_getValueFromPath(left, payload))
-			}
-			if(right.type == 'quotedText'){
-				right.value = Boolean(_getValueFromPath(right, payload))
-			}
-
-			let result = (left.value && right.value)
-
-			return { type: "condition", value: result }
-
+logicalOrExpression
+		= left:logicalAndExpression _ "||" _ right:logicalOrExpression {
+			return { type: "condition", value: left.value || right.value };
 		}
+		/ logicalAndExpression
+	
+logicalAndExpression
+	= left:logicalTerm _ "&&" _ right:logicalAndExpression {
+		return { type: "condition", value: left.value && right.value };
+	}
+	/ logicalTerm
 
-logicalOrExpression "LogicalOrExpression"
-    = 	left:(condition / operand ) _ "||" _ right:(condition / operand ) { 
+logicalTerm
+	= parenExpr
+	/ condition
+	/ operand
 
-			if(left.type !== 'condition'){
-				left.value = Boolean(_getValueFromPath(left, payload))
-			}
-			if(right.type !== 'condition'){
-				right.value = Boolean(_getValueFromPath(right, payload))
-			}
-
-			let result = (left.value || right.value)
-
-			return { type: "condition", value: result }
-
-		}
-
+parenExpr
+	= "(" _ expr:logicalOrExpression _ ")" { return expr; }
 
 operators "Operators"
 	= 	'===' / '==' / '!==' / '!=' / '<=' / '>=' / '<' / '>'
@@ -589,17 +718,42 @@ usingPattern "Using"
 			}
 		}
 
+/*
+byPattern
+	=	list:operand _ "by" _ key:operand {
+			return {
+				type: 'groupBy',
+				//name: list.value,
+				//key: key.value
+				name: key.value,
+				key: list.value
+			}
+		}
+*/		
+		
 // ATTRIBUTES
 // USE SAME AS NAME IN USING FOR KEY???????????
 attribute
 	= 	key:attrKey _ "=" _ value:(objectField / quotedText / text) {
 			return { type: "attribute", key, value: value.value }
 		}
+	/   prefixPattern
+
+prefixPattern
+	=   prefix:("." / "#" / "-") name:attrKey {
+			let type;
+			switch (prefix) {
+				case ".": type = "classes"; break;
+				case "#": type = "id"; break;
+				case "-": type = "flag"; break;
+			}
+			return { type, value: name }
+		}
 
 attrKey
 	=	$([a-zA-Z0-9-_.]+)
 
-
+/*
 // CLASSES
 classPattern
 	=	"." className:attrKey {
@@ -617,9 +771,26 @@ flag
 	=	"-" flag:attrKey {
 			return { type: "flag", value: flag }
 		}
+*/
 
 // OTHER
 otherValue
 	=	other:($("'" [^']* "'") / $("\"" [^"]* "\"") / $([^\s,]+)) { 
 			return { type: "otherValue", value: other }
+		}
+
+// IF › ElseIfBranch
+ElseIfBranch
+  = "[else:" _ cond:ifArguments _ "]" nl
+	body:
+	  ( !("[else:" / "[else]" / "[/if]") expr:expression { return expr; } )*
+	{
+	  return { params: cond, condition: cond, content: body };
+	}
+
+// IF › ElseBranch
+ElseBranch
+	=	"[else]" _ body:( !("[else:" / "[else:" / "[/if]") expr:expression { return expr; } )*
+		{		
+			return { content: body };
 		}
