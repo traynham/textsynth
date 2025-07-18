@@ -91,7 +91,7 @@ export default {
 		}
 		
 		// CLASSES
-		if(cargo.classes.length){ 
+		if(cargo.classes?.length){ 
 			attr.class = cargo.classes.sort().join(' ')
 		}
 		
