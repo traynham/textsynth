@@ -56,7 +56,7 @@ export default {
 		if(!content){ return content }
 		
 		if(req.cargo.flags.includes('markdown')){
-			return req.engine.runPlugin('md', {content: content})	
+			return req.engine.runPlugin('markdown', {content: content})	
 		}
 		
 		return content
