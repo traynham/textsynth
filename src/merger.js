@@ -5,7 +5,6 @@ import process from 'process'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
-import * as entities from 'entities'
 import Matter from 'gray-matter'
 import Lorry from '@jessetraynham/lorry'
 import * as peggy from "peggy"
@@ -16,6 +15,9 @@ import walk from 'walk-sync'
  * Class for merging text using plugins and tags.
  */
 class Engine {
+	
+	// ENV
+	env = {}
 	
 	// PLUGINS/TAGS
 	plugins = {}                                          // BASE PLUGINS
@@ -62,17 +64,40 @@ class Engine {
 		options.removeTabs = opt.removeTabs !== false
 		options.flush_comments = opt.flush_comments !== false
 		options.debug = opt.debug == true ? true : false
+//		options.debug = true
 		options.paths.plugins = opt.plugins ? opt.plugins : 'plugins'
 		options.paths.views = path.join( options.paths.app, opt.views ? opt.views : 'views' )
 		
 		this.setDelimiters(opt.delimiters)
 		
 	}
+	
+	// Run plugins start up method.
+	async initializePlugins(plugins) {
+		for (const key in plugins) {
+			const plugin = plugins[key]
+			if (typeof plugin.onStartup === 'function') {
+				await plugin.onStartup()
+			}
+		}
+	}
 
+	detectEnvironment() {
+		// If 'window' is undefined, we're in Node; else, browser.
+		if (typeof window === 'undefined') {
+			this.env.platform = 'node'
+		} else {
+			this.env.platform = 'browser'
+		}
+	}
+	
 	/**
 	 * Initialize the Engine by loading default and custom plugins.
 	 */
 	async init() {
+		
+		// DETECT ENVIRONMENT
+		this.detectEnvironment()
 		
 		// LOAD DEFAULT PLUGINS
 		const pluginDirectory = join(this.options.paths.src, 'plugins')
@@ -81,6 +106,11 @@ class Engine {
 		// LOAD CUSTOM PLUGINS
 		let custom = path.join(this.options.paths.app, this.options.paths.plugins)
 		await this._loadPluginsDir(custom, 'Custom')
+		
+		//await this.initializePlugins(this.plugins)
+		await this.initializePlugins(this.tags)
+		
+//		console.log('PLUGINS::', this.plugins)
 		
 		this.peggy_setup()
 		
@@ -95,8 +125,15 @@ class Engine {
 	 */
 	alias = (tag, alias) => {
 		if(!Array.isArray(alias)) { alias = [alias] }
-		alias.forEach( alias => {
-			this.tags[alias] = {...this.plugins[tag], alias: alias}
+		//alias.forEach( alias => {
+		//	this.tags[alias] = {...this.plugins[tag], alias: alias}
+		//})
+		alias.forEach(aliasName => {
+			this.tags[aliasName] = {
+				...this.plugins[tag],
+				alias: aliasName,
+				variant: 'alias' // Mark as alias
+			}
 		})
 	}
 	
@@ -153,7 +190,7 @@ class Engine {
 	
 	
 	peggy_setup(){
-		
+		/*
 		this.tagsByKind = { single: [], container: [] }
 		
 		for (let tag in this.tags) {
@@ -164,6 +201,8 @@ class Engine {
 			}
 		}
 		
+		console.log(this.tagsByKind)
+		*/
 		const grammarPath = join(this.options.paths.src, 'grammar.peggy')
 		
 		const grammar = fs.readFileSync(grammarPath, 'utf-8')
@@ -189,7 +228,7 @@ class Engine {
 				{
 					DEBUG: this.options.debug,
 					payload, 
-					tagsByKind: this.tagsByKind, 
+//					tagsByKind: this.tagsByKind, 
 					tags: this.tags, 
 					engine: this,
 					grammarSource: 'grammar.peggy',
@@ -266,11 +305,12 @@ class Engine {
 		// ALLOW PAGE.MD TO TRUMP _SYNTH.MD VALUE.
 		if(payload.page.md === false){
 			payload._synth.md = false
+			payload._synth.markdown = false
 		}
 		
 		// IF MARKDOWN
 		if(payload._synth.md || payload.page.md){
-			template = `${start}md${end}${template}${start}/md${end}`
+			template = `${start}markdown${end}${template}${start}/markdown${end}`
 		}
 		
 		// IF CACHE
@@ -450,12 +490,16 @@ class Engine {
 		let del = this.options.delimiters
 		
 		del.raw = { start: start, end: end }
-		del.enc = { start: entities.encodeHTML(start), end: entities.encodeHTML(end) }
+		del.enc = { start: this.encodeAsHtmlEntity(start), end: this.encodeAsHtmlEntity(end) }
 		del.esc = {
 			start: start.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'),
 			end:   end.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
 		}
 		
+	}
+	
+	encodeAsHtmlEntity(str) {
+		return Array.from(str, ch => `&#${ch.codePointAt(0)};`).join('');
 	}
 	
 	/**
@@ -470,6 +514,7 @@ class Engine {
 	 */
 	use = (...plugins) => {
 		plugins.forEach((plugin) => {
+			plugin.variant = 'original';
 			this.plugins[plugin.name] = plugin
 			this.tags[plugin.name] = plugin
 			if(plugin.aliases){
