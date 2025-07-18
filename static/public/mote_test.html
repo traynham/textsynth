@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>MOTE Plugin Tests</title>
+	<link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css">
+	<script type="module">
+		
+		import 'https://unpkg.com/mocha@11.5.0/mocha.js'
+		import { expect } from 'https://unpkg.com/chai@5.2.0/chai.js'
+		import mote from '/js/mote.js'
+		import payload from '/tests/payload.js';
+		
+		// CUSTOM PLUGINS
+		import pay from '/js/plugins/pay.js'; 
+		import breadcrumbs from '/js/plugins/breadcrumbs.js'; 
+		import man from '/js/plugins/man.js'; 
+		import things from '/js/plugins/things.js'; 
+		
+//		console.log('Man::', man)
+		
+		mote
+			.use(pay)
+			.use(breadcrumbs)
+			.use(man)
+			.use(things)
+		
+		console.log('MOTE::', mote)
+		
+		
+//		console.log('PAY::', pay)
+//		console.log('BREAD::', breadcrumbs)
+		
+		const input = "[man: 'markdown']";
+		
+		console.log('MAN::', mote.process(input, payload))
+		
+		
+		mocha.setup('bdd')
+		
+		window.testing = {expect, mote, payload}
+	  
+		const testFiles = [
+			
+			// ARRAY_AND_TEXT
+			'/tests/array_and_text/count.js',
+			'/tests/array_and_text/join.js',
+			'/tests/array_and_text/length.js',
+			'/tests/array_and_text/random.js',
+			'/tests/array_and_text/reverse.js',
+			'/tests/array_and_text/slice.js',
+			
+			// CONDITIONAL
+			'/tests/conditional/choose.js',
+			'/tests/conditional/if.js',
+			'/tests/conditional/unless.js',
+			
+			// CUSTOM
+			'/tests/custom/pay.js',
+			'/tests/custom/breadcrumbs.js',
+			'/tests/custom/things.js',
+			
+			// ENCODING
+			'/tests/encoding/encode_delimiters.js',
+			'/tests/encoding/escape_delimiters.js',
+			'/tests/encoding/escape_html.js',
+			'/tests/encoding/stringify.js',
+			'/tests/encoding/unencode_delimiters.js',
+			'/tests/encoding/unescape_delimiters.js',
+			'/tests/encoding/unescape_html.js',
+			
+			// FORMATTING
+			'/tests/formatting/ignore.js',
+			'/tests/formatting/markdown.js',
+			
+			// GENERAL
+			'/tests/general/__general.js',
+			'/tests/general/merge.js',
+			'/tests/general/mergeFile.js',
+			'/tests/general/pluginSettings.js',
+			'/tests/general/runPlugin.js',
+			
+			// HTML
+			'/tests/html/html_tags.js',
+			'/tests/html/link_list.js',
+			
+			// ITERATION
+			'/tests/iteration/each.js',
+			
+			// LAYOUTS
+			'/tests/layouts/layouts.js',
+			
+			// TEXT
+			'/tests/text/camelcase.js',
+			'/tests/text/capitalize.js',
+			'/tests/text/lowercase.js',
+			'/tests/text/repeat.js',
+			'/tests/text/replace.js',
+			'/tests/text/slugify.js',
+			'/tests/text/snakecase.js',
+			'/tests/text/substring.js',
+			'/tests/text/titlecase.js',
+			'/tests/text/trim.js',
+			'/tests/text/truncate.js',
+			'/tests/text/uppercase.js',
+			
+			// UTIL
+			// cache
+			// importJSON
+			// include
+			'/tests/util/log.js',
+			'/tests/util/modifiers.js',
+			'/tests/util/var.js',
+			
+		]
+		
+		Promise.all(
+				testFiles.map(file => 
+				//import(file).then(() => console.log(`Loaded: ${file}`))
+				import(file)
+			)
+		).then(() => {
+			if (document.readyState === 'loading') {
+				window.addEventListener('DOMContentLoaded', () => mocha.run())
+			} else {
+				mocha.run()
+			}
+		})
+		
+	</script>
+</head>
+<body>
+	<div id="mocha"></div>
+</body>
+</html>
