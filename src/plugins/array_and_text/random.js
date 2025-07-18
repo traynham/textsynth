@@ -42,5 +42,6 @@ export default {
 		
 		const index = Math.floor(Math.random() * content.length)
 		return content[index]
+		
 	}
 }
