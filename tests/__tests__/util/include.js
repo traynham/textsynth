@@ -20,6 +20,12 @@ describe('include plugin', () => {
 		const result = await textSynth.merge(input, payload)		
 		expect(result.trim()).toBe('This is the header.')
 	})
+	
+	test('Include header.synth.', async () => {
+		const input = "[include: -removeTabs, 'header2.synth']"
+		const result = await textSynth.merge(input, payload)		
+		expect(result.trim()).toBe('This is the header.')
+	})
 
 	test('Include file requires an extension.', async () => {
 		const input = "[include: 'header']"
@@ -37,7 +43,8 @@ describe('include plugin', () => {
 		const input = "[include:]"
 		const result = await textSynth.merge(input, payload)
 		//expect(result.trim()).toBe('undefined')
-		expect(result.trim()).toBe('ERROR: "include" tag expected content.')
+		//expect(result.trim()).toBe('ERROR: "include" tag expected content.')
+		expect(result.trim()).toBe('ERROR: No file specified for include tag')
 	})
 	
 	test('Include with no content should throw error, with string.', async () => {
