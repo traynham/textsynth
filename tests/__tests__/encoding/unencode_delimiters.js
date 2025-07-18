@@ -6,7 +6,7 @@ const textSynth = await TextSynth()
 // Test payload
 const payload = {
 	data: {
-		encContent: "Hello &lbrack;uppercase 'John Doe'&rbrack;",
+		encContent: "Hello &#91;uppercase 'John Doe'&#93;",
 		//escContent: "Hello \\[uppercase 'John Doe'\\]",
 		unEncContent: "Hello [uppercase 'John Doe']",
 		null: null,
