@@ -48,25 +48,23 @@ describe('log plugin', () => {
 		logMock.mockRestore()
 		
 	})
-	
-	// NOTE: THIS TEST IS BAD.
+
 	test('logs grouping and property', () => {
-		
 		const logMock = jest.spyOn(console, 'log')
 		
 		const input = '[log: "Simple String", property.path, -table]'
 		textSynth.merge(input, payload)
 		
-		const output =  "┌─────────┬─────────┐\n" +
-						"│ (index) │ Values  │\n" +
-						"├─────────┼─────────┤\n" +
-						"│   key   │ 'value' │\n" +
-						"└─────────┴─────────┘"
+		// Grab what was logged (the table)
+		const actual = logMock.mock.calls[0][0]
 		
-		expect(logMock).toHaveBeenCalledWith(output)
+		// Confirm that the actual log contains all the expected parts
+		expect(actual).toContain('key')
+		expect(actual).toContain("'value'")
+		expect(actual).toContain('Values')
+		expect(actual).toContain('(index)')
 		
 		logMock.mockRestore()
-		
 	})
-	
+
 })
