@@ -1,0 +1,218 @@
+:root {
+	--padding: 25px;
+	--padding-small:  calc(var(--padding) / 2);
+	--padding-smaller:  calc(var(--padding) / 3);
+	--padding-large:  calc(var(--padding) * 2);
+	
+	/* Define the HSL values for the base color */
+	--base-h: 30;
+	--base-s: 50%;
+	--base-l: 100%;
+
+	/* Calculate darker shades of base */
+	--base: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 0%));
+	--base-10: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 10%));
+	--base-20: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 20%));
+	--base-30: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 30%));
+	--base-40: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 40%));
+	--base-50: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 50%));
+	--base-60: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 60%));
+	--base-70: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 70%));
+	--base-80: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 80%));
+	--base-90: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 90%));
+	--base-100: hsl(var(--base-h), var(--base-s), calc(var(--base-l) - 100%));
+
+}
+
+body, html {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	font-family: Arial, sans-serif;
+}
+
+h2 {
+	font-size: 2rem;
+	margin: 0 0 1rem;
+}
+
+h3 {
+	margin-top: var(--padding-large);
+	margin-bottom: var(--padding);
+}
+
+p {
+	line-height: 1.6rem;
+	word-spacing: .05rem;
+}
+
+pre {
+	border-radius: 5px;
+	border: 1px solid var(--base-30);  /* Replace #333 with your preferred border color */
+	box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);  /* Inset shadow, adjust as needed */
+	background-color: rgba(0, 0, 0, 0.05);  /* 25% opacity black background, adjust color as needed */
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	display: block;
+	margin-bottom: 1rem;
+	overflow: auto;
+	width: 100%;
+}
+
+th, td {
+	border: 1px solid #ddd;
+	padding: 6px 13px;
+}
+
+
+
+/* THREE PANE STRUCTURE */
+.header {
+	background-color: #333;
+	color: white;
+	text-align: center;
+	height: 80px;
+	line-height: 80px;
+}
+
+.main-container {
+	display: flex;
+	height: calc(100% - 80px);
+}
+
+.sidebar {
+	width: 300px;
+	border-right: 1px solid var(--base-20);
+	padding: 0;
+	overflow: auto;
+	height: 100%;
+	background-color: var(--base-10);
+}
+/* END THREE PANE STRUCTURE */
+
+.content {
+  padding: var(--padding-large);
+  padding-bottom: 500px;
+  overflow: auto;
+  width: calc(100% - 300px);
+}
+
+dl {
+	margin: 0;
+	padding: 0;
+}
+
+dt, dd {
+	cursor: pointer;
+}
+
+dt {
+	color: var(--base-70);
+	font-family: "Helvetica Neue", Arial, sans-serif;
+	font-size: 16px;
+	font-weight: 400;
+	padding: var(--padding-small);
+}
+
+dt:before {
+	font-family: "Font Awesome 6 Free";
+	//content: "\f105";
+	content: "\f07b";
+	padding-right: 5px;
+}
+
+dt.active:before {
+	//content: "\f107";
+	content: "\f07c";
+}
+
+dd {
+	display: none;
+	margin: 0;
+	color: var(--base-70);
+	font-size: 14px;
+	font-weight: 200;
+}
+
+dd ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+
+li {
+	padding: var(--padding-smaller);
+	padding-left: var(--padding);
+}
+
+dt.active {
+	background-color: var(--base-60);
+	color: var(--base-10);
+}
+
+li.active {
+	background-color: var(--base-20);
+}
+
+/*
+li:before {
+	font-family: "Font Awesome 6 Free";
+	content: "\f15b";
+	padding-right: 5px;
+}
+*/
+
+
+/* SIDEBAR */
+.sidebar dt:not(.active) + dd {
+	display: none;
+}
+
+.sidebar dt.active + dd {
+	display: block;
+	background-color: var(--base-10);
+	background-color: rgba(0, 0, 0, 0.05);  /* 25% opacity black background, adjust color as needed */
+
+}
+
+/* CONTENT */
+/*
+#content article:not(.active) {
+	display: none;
+}
+
+#content article.active{
+	display: block;
+	XXXbackground-color: none !important;
+}
+*/
+
+article {
+	color: var(--base-60);
+	padding: var(--padding-small);
+	xxpadding-top: var(--padding-large);
+	margin: var(--padding-large);
+	XXXborder: 1px solid red;
+}
+
+#content table {
+	width: 100%;	
+}
+
+#content table thead:first-child {
+  display: none;
+}
+/*
+article.focused {
+	XXXborder: 1px solid rgb(106, 106, 106);
+}
+*/
