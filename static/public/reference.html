@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>MOTE Modular Template Engine Reference</title>
+	
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
+	<link href="/css/main.css" rel="stylesheet">
+	
+	<script type="module">
+		
+		import mote from '/js/mote.js';
+		console.log('MOTE:', mote)
+		
+		const sidebar = document.getElementById('sidebar');
+		const content = document.getElementById('content');
+		
+		// LOAD CONTENT IF HASH PRESENT
+		if(location.hash.slice(1)){
+			const plugin = location.hash.slice(1);
+			renderPlugin(plugin)
+		}
+		
+		// LOAD CONTENT ON HASH CHANGE
+		window.addEventListener('hashchange', () => {			
+			const plugin = location.hash.slice(1);
+			renderPlugin(plugin)
+		})
+		
+		// LOAD CONTENT
+		function renderPlugin(plugin) {
+			if (plugin) {
+				mote.renderTo('#content', `[man: '${plugin}']`, {});
+			}
+		}
+		
+		const sidebar_template = `
+			[groupBy: category using tags]
+				[each: items]				
+					<h2>[value.key]</h2>
+					<ul>
+					[each: value.value]
+						<li><a href="#[value.name]">[value.name]</a></li>
+					[/each]
+					</ul>
+				[/each]
+			[/groupBy]
+		`
+		
+		const tagsArray = Object.values(mote.tags);
+		
+		let sidebar_render = mote.renderTo('#sidebar', sidebar_template, {tags: tagsArray})
+		
+	</script>
+	
+	<style>
+	/* Doc Styles */
+	#content {
+	  font-family: system-ui, sans-serif;
+	  line-height: 1.6;
+	  max-width: 800px;
+	  padding: 1rem;
+	}
+	
+	#content h1, #content h2, #content h3 {
+	  font-weight: bold;
+	  border-bottom: 1px solid #ccc;
+	  padding-bottom: 0.3em;
+	  margin-top: 2em;
+	}
+	
+	#content code {
+	  background: #f0f0f0;
+	  padding: 2px 4px;
+	  border-radius: 3px;
+	  font-family: monospace;
+	}
+	
+	#content pre {
+	  background: #f6f8fa;
+	  padding: 1em;
+	  overflow-x: auto;
+	  border-radius: 4px;
+	}
+	
+	#content blockquote {
+	  border-left: 4px solid #ccc;
+	  padding-left: 1em;
+	  color: #555;
+	  font-style: italic;
+	}
+	
+	#content ul {
+	  margin-left: 1.2em;
+	}
+	</style>
+</head>
+<body>
+	
+	<div class="header" style="display: flex;">
+		Header
+	</div>
+
+	<div class="main-container">
+		
+		<div class="sidebar" id="sidebar">
+			sidebar nav
+		</div>
+	
+		<article class="content" id="content">
+			content
+		</article>
+		
+	</div>
+	
+</body>
+</html>
