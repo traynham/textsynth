@@ -48,10 +48,12 @@ export default {
 	processor(req) {
 		
 		// DESTRUCTURE THE REQUEST OBJECT
-		let { content, params, payload, engine } = req
+		//let { content, params, payload, engine } = req
+		let { contentRaw, params, payload, engine } = req
 		
 		// LOAD THE LAYOUT CONTENT
-		let layoutContent = this.loadLayout(payload, params)
+//		let layoutContent = this.loadLayout(payload, params)
+		let layoutContent = this.loadLayout(payload, params, req)
 		
 		// CREATE A STACK TO HANDLE NESTED LAYOUT RENDERING
 		// INITIALIZE IT IF IT DOESN'T EXIST YET
@@ -70,7 +72,8 @@ export default {
 		this.populateLayoutBlocksObj(engine, payload, params, layoutContent) 
 		
 		// RENDER THE LAYOUT WITH THE BLOCK CONTENT AND RETURN THE RESULT
-		let renderedLayout = this.renderLayout(engine, content, layoutContent, params, payload)
+		//let renderedLayout = this.renderLayout(engine, content, layoutContent, params, payload)
+		let renderedLayout = this.renderLayout(engine, contentRaw, layoutContent, params, payload)
 		
 		// ONCE THE LAYOUT IS RENDERED, POP THE STACK TO CLEAN UP
 		payload._layoutStack.pop()
@@ -80,10 +83,16 @@ export default {
 		
 	},
 	
-	loadLayout(payload, params) {
+	loadLayout(payload, params, req) {
+	//loadLayout(payload, params) {
+		
 		
 		// IF THE PAYLOAD CONTAINS THE LAYOUT, JUST RETURN IT
 		if(payload.layout){ return payload.layout }
+		
+		if (req.engine.env.platform === 'browser') {
+			return req.engine.fetchSync(params[0].value)
+		}
 		
 		// CONSTRUCT THE FULL PATH TO THE LAYOUT FILE
 		const layoutPath = path.join(payload._synth.views, params[0].value)
@@ -123,7 +132,7 @@ export default {
 		engine.process(layoutContent, { ...payload, blocks})
 		
 		// IF THE PAYLOAD HAS A 'PAGE.BLOCK' PROPERTY, USE THE BLOCK FOR THE RENDERED CONTENT
-		if(payload.page.block){
+		if(payload.page?.block){
 			blocks[payload.page.block] = rendered
 		}
 		
