@@ -5,6 +5,8 @@ const textSynth = await TextSynth()
 
 textSynth.flush_comments = false
 
+const port = 3100
+
 const payload = {
   _synth: {
 	views: './tests/support/views'
@@ -54,10 +56,11 @@ describe('importJSON plugin using simple syntax', () => {
 	})
 		
 	test('ImportJSON using page data.', async () => {
-		let payload = {url: 'http://127.0.0.1:3000/records.json6'}
+		//let payload = {url: 'http://127.0.0.1:3000/records.json6'}
+		let payload = {url: `http://127.0.0.1:${port}/records.json6`}
 		let template = 
 			'---\n' +
-			"importJSON: 'http://127.0.0.1:3000/records.json6'\n" +
+			`importJSON: 'http://127.0.0.1:${port}/records.json6'\n` +
 			'---\n' +
 			'[JSON.title]'
 		
@@ -66,10 +69,12 @@ describe('importJSON plugin using simple syntax', () => {
 	})
 	
 	test('ImportJSON using page data and "using".', async () => {
-		let payload = {url: 'http://127.0.0.1:3000/records.json6'}
+		//let payload = {url: 'http://127.0.0.1:3000/records.json6'}
+		let payload = {url: `http://127.0.0.1:${port}/records.json6`}
 		let template = 
 			'---\n' +
-			"importJSON: data using 'http://127.0.0.1:3000/records.json6'\n" +
+			//"importJSON: data using 'http://127.0.0.1:3000/records.json6'\n" +
+			`importJSON: data using 'http://127.0.0.1:${port}/records.json6'\n` +
 			'---\n' +
 			'[data.title]'
 		
@@ -78,10 +83,12 @@ describe('importJSON plugin using simple syntax', () => {
 	})
 	
 	test('ImportJSON using page data.', async () => {
-		let payload = {url: 'http://127.0.0.1:3000/records.json6'}
+		//let payload = {url: 'http://127.0.0.1:3000/records.json6'}
+		let payload = {url: `http://127.0.0.1:${port}/records.json6`}
 		let template = 
 			'---\n' +
-			"importJSON: ['http://127.0.0.1:3000/records.json6', data using 'http://127.0.0.1:3000/records.json6']\n" +
+			//"importJSON: ['http://127.0.0.1:3000/records.json6', data using 'http://127.0.0.1:3000/records.json6']\n" +
+			`importJSON: ['http://127.0.0.1:${port}/records.json6', data using 'http://127.0.0.1:${port}/records.json6']\n` +
 			'---\n' +
 			'[JSON.title][data.title]'
 		
@@ -130,7 +137,8 @@ describe('importJSON plugin with using syntax', () => {
 describe('importJSON plugin with using syntax', () => {
 
 	test('importJSON with a url.', async () => {
-		const input = "[importJSON: customName using 'http://127.0.0.1:3000/records.json6']"
+		//const input = "[importJSON: customName using 'http://127.0.0.1:3000/records.json6']"
+		const input = `[importJSON: customName using 'http://127.0.0.1:${port}/records.json6']`
 		const result = await textSynth.merge(input, payload)		
 		expect(result.trim()).toBe('') // Expect no error message
 	})
