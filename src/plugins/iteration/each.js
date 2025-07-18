@@ -54,8 +54,6 @@ export default {
 
 	processor(req) {
 		
-//		console.log('REQ::', req)
-		
 		let payload = {...req.payload}
 		
 		let iterable = req.params[0]
