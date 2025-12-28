@@ -602,6 +602,35 @@ async function expressTextSynthEngine(filePath, options, callback) {
 }
 /* c8 ignore end */
 
+/* c8 ignore start */
+function registerExpressTextSynth(app, textSynth, opt = {}) {
+	const {
+		extensions = ['md', 'lay'],
+		viewEngine = extensions[0],
+		engine = expressTextSynthEngine
+	} = opt
+
+	if (!app || typeof app.engine !== 'function') {
+		throw new Error('registerExpressTextSynth requires an Express app instance')
+	}
+	if (!textSynth) {
+		throw new Error('registerExpressTextSynth requires a textSynth instance')
+	}
+
+	const extList = Array.isArray(extensions) ? extensions : [extensions]
+
+	extList.forEach((ext) => {
+		app.engine(ext, (filePath, options, callback) => {
+			engine(filePath, { ...options, textSynth }, callback)
+		})
+	})
+
+	if (viewEngine) {
+		app.set('view engine', viewEngine)
+	}
+}
+/* c8 ignore end */
+
 
 // CREATE AND INIT ENGINE.
 async function initEngine(opt) {
@@ -612,4 +641,4 @@ async function initEngine(opt) {
 
 
 export default initEngine // textSynth
-export { initEngine, expressTextSynthEngine }
+export { initEngine, expressTextSynthEngine, registerExpressTextSynth }
