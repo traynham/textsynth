@@ -8,3 +8,4 @@ package-lock.json
 /tests/coverage
 /tests/support/cache
 /src/plugins_disabled
+/_private
