@@ -4,10 +4,9 @@ export default {
 	name: 'ignore',
 	author: 'Jesse Traynham',
 	category: 'Formatting',
-	aliases: ['md'],
 	description: 'Ignores the content and returns it as a raw string, escaping any special characters.',
 	kind: 'container',
-	syntax: '[ignore] Your raw content here [/ignore]',
+	syntax: '[ignore] Your raw contenthere [/ignore]',
 	version: '1.0.0',
 	
 	// Content and Params details
