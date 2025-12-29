@@ -581,6 +581,7 @@ class Engine {
 
 }
 
+
 /* c8 ignore start */
 async function expressTextSynthEngine(filePath, options, callback) {
 	
@@ -603,31 +604,31 @@ async function expressTextSynthEngine(filePath, options, callback) {
 /* c8 ignore end */
 
 /* c8 ignore start */
-function registerExpressTextSynth(app, textSynth, opt = {}) {
-	const {
-		extensions = ['md', 'lay'],
-		viewEngine = extensions[0],
-		engine = expressTextSynthEngine
-	} = opt
+async function expressMote(app, opt = {}) {
+	const textSynth = await initEngine(opt)
+
+	const extensions = opt.extensions || ['md', 'lay']
+	const viewEngine = Object.prototype.hasOwnProperty.call(opt, 'viewEngine')
+		? opt.viewEngine
+		: (Array.isArray(extensions) ? extensions[0] : extensions)
 
 	if (!app || typeof app.engine !== 'function') {
-		throw new Error('registerExpressTextSynth requires an Express app instance')
-	}
-	if (!textSynth) {
-		throw new Error('registerExpressTextSynth requires a textSynth instance')
+		throw new Error('expressMote requires an Express app instance')
 	}
 
 	const extList = Array.isArray(extensions) ? extensions : [extensions]
 
 	extList.forEach((ext) => {
 		app.engine(ext, (filePath, options, callback) => {
-			engine(filePath, { ...options, textSynth }, callback)
+			expressTextSynthEngine(filePath, { ...options, textSynth }, callback)
 		})
 	})
 
 	if (viewEngine) {
 		app.set('view engine', viewEngine)
 	}
+
+	return textSynth
 }
 /* c8 ignore end */
 
@@ -640,5 +641,5 @@ async function initEngine(opt) {
 }
 
 
-export default initEngine // textSynth
-export { initEngine, expressTextSynthEngine, registerExpressTextSynth }
+export default initEngine // TextSynth
+export { initEngine, expressTextSynthEngine, expressMote, initEngine as Mote }
