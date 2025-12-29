@@ -52,13 +52,7 @@ export default {
 	// Processor logic
 	processor(request) {
 		
-//		console.log('REQUEST::', request)
-		
 		let { cargo } = request
-		
-		// console.log('KEYS::', Object.keys(request))
-//		console.log('CARGO::', cargo)
-//		console.log('CONTENT::', request.content)
 		
 		let conditionIsTrue
 		
