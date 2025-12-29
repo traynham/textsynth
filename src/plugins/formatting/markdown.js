@@ -1,4 +1,5 @@
 export default {
+	
 	name: 'markdown',
 	aliases: ['md'],
 	author: 'Jesse Traynham',
@@ -12,6 +13,9 @@ export default {
 	],
 	category: 'Formatting',
 	description: 'Renders markdown content into HTML with additional support for attributes and Prism syntax highlighting.',
+	kind: 'container',
+	version: '1.0.0',
+	
 	docs: {
 		flags: {'keepTabs': 'By default, tabs will be removed. Use this flag to leave tabs in.'},
 		content: [
@@ -32,8 +36,7 @@ export default {
 		],
 		syntax: '[markdown] Your **markdown** text here [/markdown]',
 	},
-	kind: 'container',
-	version: '1.0.0',
+	
 
 	// Private plugin state and helpers (encapsulated)
 	_md: null,
@@ -78,11 +81,7 @@ export default {
 		
 		let output = req.engine.process(req.content, req.payload)
 		
-		output = req.engine.runPlugin('unescape_delimiters', { content: output })
-		
 		output = this._md.render(output)
-		
-		output = req.engine.runPlugin('escape_delimiters', { content: output })
 		
 		return output;
 		
