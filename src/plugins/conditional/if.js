@@ -52,7 +52,13 @@ export default {
 	// Processor logic
 	processor(request) {
 		
+//		console.log('REQUEST::', request)
+		
 		let { cargo } = request
+		
+		// console.log('KEYS::', Object.keys(request))
+//		console.log('CARGO::', cargo)
+//		console.log('CONTENT::', request.content)
 		
 		let conditionIsTrue
 		
@@ -71,8 +77,8 @@ export default {
 			conditionIsTrue = request.cargo.condition
 		}
 
-		
-		if(conditionIsTrue){
+		// Only run if conditionIsTrue and content is valid.
+		if(conditionIsTrue && request.content){
 			return request.engine.process(request.content, request.payload)
 		}
 		
