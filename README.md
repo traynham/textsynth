@@ -1,6 +1,6 @@
-# TextSynth
+# Mote
 
-TextSynth is an extensible text templating engine with an intuitive syntax and built-in plugin support, enabling seamless merging and manipulation of data to generate dynamic content for various applications.
+Mote (MOdular Template Engine, formerly TextSynth) is an extensible text templating engine with an intuitive syntax and built-in plugin support, enabling seamless merging and manipulation of data to generate dynamic content for various applications.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ TextSynth is an extensible text templating engine with an intuitive syntax and b
 
 ## Installation
 
-Install TextSynth using npm:
+Install Mote using npm (package name remains `text-synth`):
 
 ```bash
 npm install text-synth
@@ -36,46 +36,46 @@ npm install text-synth
 
 ### Basic Usage
 
-Import the TextSynth library and create a new instance:
+Import the Mote library and create a new instance:
 
 ```javascript
-import TextSynth from 'textsynth';
+import { Mote } from 'textsynth';
 
-const textSynth = await TextSynth();
+const mote = await Mote();
 
 const template = 'Hello, [name]!';
 const data = { name: 'World' };
 
-const output = textSynth.merge(template, data);
+const output = mote.merge(template, data);
 console.log(output); // Output: Hello, World!
 
 ```
 
 ### Plugins
 
-TextSynth comes with built-in plugins that can be used to manipulate text within your templates:
+Mote comes with built-in plugins that can be used to manipulate text within your templates:
 
 ```javascript
-import TextSynth from 'textsynth';
+import { Mote } from 'textsynth';
 
-const textSynth = await TextSynth();
+const mote = await Mote();
 
 const template = 'Hello, [uppercase:name]!';
 const data = { name: 'world' };
 
-const output = textSynth.merge(template, data);
+const output = mote.merge(template, data);
 console.log(output); // Output: Hello, WORLD!
 
 ```
 
 ### Creating Custom Plugins
 
-Create custom plugins to extend TextSynth's functionality:
+Create custom plugins to extend Mote's functionality:
 
 ```javascript
-import TextSynth from 'textsynth';
+import { Mote } from 'textsynth';
 
-const textSynth = await TextSynth();
+const mote = await Mote();
 
 const reversePlugin = {
 	name: 'reverse',
@@ -83,30 +83,32 @@ const reversePlugin = {
 	processor: ({ content }) => content.split('').reverse().join(''),
 };
 
-textSynth.use(reversePlugin);
+mote.use(reversePlugin);
 
 const template = 'Hello, [reverse:name]!';
 const data = { name: 'world' };
 
-const output = textSynth.merge(template, data);
+const output = mote.merge(template, data);
 console.log(output); // Output: Hello, dlrow!
 
 ```
 
 ### Express.js Integration
 
-Use TextSynth as a templating engine in your Express.js application:
+Use Mote as a templating engine in your Express.js application:
 
 ```javascript
 import express from 'express';
-import TextSynth, { expressTextSynthEngine } from 'textsynth';
+import { expressMote } from 'textsynth';
 
 const app = express();
-const textSynth = await TextSynth();
+const mote = await expressMote(app, {
+	extensions: ['md', 'lay'],
+	viewEngine: 'md'
+});
 
-app.engine('synth', expressTextSynthEngine);
-app.set('view engine', 'synth');
-app.set('textMerger', textSynth);
+// Optional: expose the instance to your routes.
+app.set('textMerger', mote);
 
 // Your Express.js routes and configurations
 
@@ -117,19 +119,23 @@ app.listen(3000, () => {
 
 ## Options
 
-TextSynth can be customized using the following options:
+Mote can be customized using the following options:
 
-- `opener`: The opening tag for merge tags (default: `[`)
-- `closer`: The closing tag for merge tags (default: `]`)
-- `removeTabs`: Remove tabs from the output (default: `false`)
-- `removeTrailingNewLines`: Remove trailing new lines from the output (default: `false`)
+- `delimiters`: Array of `[open, close]` for merge tags (default: `['[', ']']`)
+- `flush_comments`: Remove comments before processing (default: `true`)
+- `removeTabs`: Remove leading tabs before processing (default: `true`)
+- `debug`: Enable debug logging (default: `false`)
+- `plugins`: Custom plugins directory name (default: `plugins`)
+- `views`: Views directory name (default: `views`)
 
 ## API
 
-- `TextSynth(options)`: Creates a new TextSynth instance with the specified options
-- `textSynth.merge(template, data)`: Merges the template and data, returning the merged output
-- `textSynth.use(plugin)`: Adds a plugin to the TextSynth instance
-- `textSynth.renderFile(filePath, data, options)`: Renders a template file with the given data and options
+- `Mote(options)`: Creates a new instance (alias of default `TextSynth` export)
+- `expressMote(app, options)`: Creates a new instance and registers Express view engines
+- `expressTextSynthEngine(filePath, options, callback)`: Low-level Express view engine (legacy name)
+- `mote.merge(template, data)`: Merges the template and data, returning the merged output
+- `mote.use(plugin)`: Adds a plugin to the Mote instance
+- `mote.renderFile(filePath, data, options)`: Renders a template file with the given data and options
 
 ## Contributing
 
@@ -137,5 +143,4 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 ## License
 
-TextSynth is released under the [MIT License](LICENSE).
-
+Mote is released under the [MIT License](LICENSE).
