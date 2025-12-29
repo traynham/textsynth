@@ -14,6 +14,14 @@
     "merge_docs": "./node_modules/.bin/jsdoc2md src/merger.js > docs/merger.md",
     "build:grammar": "peggy --format es --output src/dist/grammar.js src/grammar.peggy"
   },
+  "files": [
+    "index.js",
+    "src/merger.js",
+    "src/grammar.peggy",
+    "src/plugins/**",
+    "src/workers/**",
+    "src/dist/**"
+  ],
   "author": "Jesse Traynham",
   "license": "MIT",
   "devDependencies": {
