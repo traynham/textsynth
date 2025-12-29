@@ -89,7 +89,6 @@ export default {
 		
 		let template = `
 			
-			
 			[markdown]
 				
 				# [name] ([version])
@@ -109,7 +108,6 @@ export default {
 				
 				## Syntax
 				[encode_delimiters: docs.syntax]
-				
 				
 				## Flags
 				
