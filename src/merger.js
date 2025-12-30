@@ -581,7 +581,6 @@ class Engine {
 
 }
 
-
 /* c8 ignore start */
 async function expressTextSynthEngine(filePath, options, callback) {
 	
